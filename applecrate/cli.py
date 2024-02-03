@@ -31,10 +31,10 @@ def cli():
     pass
 
 
-@cli.command()
-def init():
-    """Create a new applecrate project."""
-    echo("Creating a new applecrate project.")
+# @cli.command()
+# def init():
+#     """Create a new applecrate project."""
+#     echo("Creating a new applecrate project.")
 
 
 # @cli.command()
@@ -105,6 +105,16 @@ def init():
     "if --app=app and --version=1.0.0.",
 )
 @click.option(
+    "--link",
+    "-k",
+    metavar="SRC TARGET",
+    nargs=2,
+    multiple=True,
+    help="Create a symbolic link from SRC to DEST after installation. "
+    "SRC and TARGET must be absolute paths and both may include template variables {{ app }} and {{ version }}. "
+    'For example: `--link "/Library/Application Support/{{ app }}/{{ version }}/app" "/usr/local/bin/{{ app }}-{{ version }}"` ',
+)
+@click.option(
     "--post-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
@@ -136,6 +146,7 @@ def build(**kwargs):
     no_uninstall = kwargs["no_uninstall"]
     url = kwargs["url"]
     install = kwargs["install"]
+    link = kwargs["link"]
     license = kwargs["license"]
     banner = kwargs["banner"]
     post_install = kwargs["post_install"]
@@ -148,6 +159,8 @@ def build(**kwargs):
         "url": url,
         "install": install,
         "banner": banner,
+        "link": link,
+        "post_install": post_install,
     }
 
     echo(f"Building installer package for {app} version {version}.")
@@ -182,15 +195,24 @@ def build(**kwargs):
         pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
 
-    echo("Creating post-install script")
+    echo("Creating post-install scripts")
     target = BUILD_DIR / "scripts" / "postinstall"
-    if post_install:
-        copy_and_create_parents(post_install, target)
-    else:
-        template = get_template("postinstall")
-        render_template(template, data, target)
+    template = get_template("postinstall")
+    render_template(template, data, target)
     pathlib.Path(target).chmod(0o755)
     echo(f"Created {target}")
+
+    target = BUILD_DIR / "scripts" / "links"
+    template = get_template("links")
+    render_template(template, data, target)
+    pathlib.Path(target).chmod(0o755)
+    echo(f"Created {target}")
+
+    if post_install:
+        target = BUILD_DIR / "scripts" / "postinstall_user"
+        copy_and_create_parents(post_install, target)
+        pathlib.Path(target).chmod(0o755)
+        echo(f"Created {target}")
 
     if banner:
         echo("Copying banner image")
@@ -226,6 +248,16 @@ def render_build_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
             dest = pathlib.Path(template.render(app=app, version=version))
             new_install.append((src, dest))
         rendered["install"] = new_install
+
+    if link := rendered.get("link"):
+        new_link = []
+        for src, target in link:
+            src_template = Template(str(src))
+            target_template = Template(str(target))
+            src = pathlib.Path(src_template.render(app=app, version=version))
+            target = pathlib.Path(target_template.render(app=app, version=version))
+            new_link.append((src, target))
+        rendered["link"] = new_link
     return rendered
 
 
@@ -275,6 +307,18 @@ def validate_build_kwargs(**kwargs):
                 raise ValueError(f"Install destination {dest} must be an absolute path")
             pathlib_install.append((src, dest))
         kwargs["install"] = pathlib_install
+
+    if link := kwargs.get("link"):
+        pathlib_link = []
+        for src, target in link:
+            src = pathlib.Path(src)
+            target = pathlib.Path(target)
+            if not src.is_absolute():
+                raise ValueError(f"Link source {src} must be an absolute path")
+            if not target.is_absolute():
+                raise ValueError(f"Link target {target} must be an absolute path")
+            pathlib_link.append((src, target))
+        kwargs["link"] = pathlib_link
 
     if banner := kwargs.get("banner"):
         banner = pathlib.Path(banner)

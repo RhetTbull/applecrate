@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Perform post installation tasks here
+
+# Create links if needed
+{% if link %}
+./links
+{% endif %}
+
 #Custermize this for your application
 # APPLICATION_FILE_PATH=bin/wso2server.sh
 

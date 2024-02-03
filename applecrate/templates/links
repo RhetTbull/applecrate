@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Create links specified by the user as part of post-install
+
+{% for source, target in link %}
+ln -s "{{ source }}" "{{ target }}"
+{% endfor %}
