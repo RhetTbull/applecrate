@@ -99,4 +99,4 @@ Heavily inspired by [macOS Installer Buidler](https://github.com/KosalaHerath/ma
 
 ## License
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License. You may obtain a copy of the License [here](https://github.com/RhetTbull/applecrate/blob/main/LICENSE).
