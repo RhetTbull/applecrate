@@ -21,7 +21,7 @@ applecrate build \
 --link /usr/local/bin/mytool "/usr/local/bin/{{ app }}-{{ version }}"
 ```
 
-This will create a native macOS installer for the tool `dist/mytool` and install it to `/usr/local/bin/mytool-1.0.0`. It will create a symlink to the tool at `/usr/local/bin/mytool` and will also create an uninstaller to remove the tool.
+This will create a native macOS installer for the tool `dist/mytool` which will install it to `/usr/local/bin/mytool-1.0.0`. The installer will create a symlink to the tool at `/usr/local/bin/mytool` and will also create an uninstaller to remove the tool.
 
 ## Usage
 
