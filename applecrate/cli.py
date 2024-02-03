@@ -86,7 +86,7 @@ def check():
     "--banner",
     "-b",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to banner image (PNG or JPEG) for installer package",
+    help="Path to optional PNG banner image for installer package.",
 )
 @click.option(
     "--install",
@@ -94,7 +94,8 @@ def check():
     metavar="FILE_OR_DIR DEST",
     nargs=2,
     multiple=True,
-    help="Install FILE_OR_DIR to destination DEST",
+    help="Install FILE_OR_DIR to destination DEST; "
+    "DEST must be an absolute path, for example /usr/local/bin/app",
 )
 @click.option(
     "--post-install",
@@ -166,12 +167,21 @@ def build(**kwargs):
     # Render the uninstall script
     if not no_uninstall:
         echo("Creating uninstall script")
-        target = BUILD_DIR / "darwinpkg" / "Library" / app / version / "uninstall.sh"
+        target = (
+            BUILD_DIR
+            / "darwinpkg"
+            / "Library"
+            / "Application Support"
+            / app
+            / version
+            / "uninstall.sh"
+        )
         if uninstall:
             copy_and_create_parents(uninstall, target)
         else:
             template = get_template("uninstall.sh")
             render_template(template, data, target)
+        pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
 
     echo("Creating post-install script")
@@ -179,8 +189,9 @@ def build(**kwargs):
     if post_install:
         copy_and_create_parents(post_install, target)
     else:
-        template = get_template(f"postinstall")
+        template = get_template("postinstall")
         render_template(template, data, target)
+    pathlib.Path(target).chmod(0o755)
     echo(f"Created {target}")
 
     if banner:
@@ -262,9 +273,11 @@ def validate_build_kwargs(**kwargs):
         pathlib_install = [
             (pathlib.Path(src), pathlib.Path(dest)) for src, dest in install
         ]
-        for src, _ in pathlib_install:
+        for src, dest in pathlib_install:
             if not src.exists():
                 raise ValueError(f"Install dir/file {src} does not exist")
+            if not dest.is_absolute():
+                raise ValueError(f"Install destination {dest} must be an absolute path")
         kwargs["install"] = pathlib_install
 
     if banner := kwargs.get("banner"):
@@ -354,7 +367,8 @@ def render_markdown_template(
     """Render and save a Jinja2 template to a file, converting markdown to HTML."""
     md = template.render(**data)
     html = markdown2.markdown(md, extras=MARKDOWN_EXTRAS)
-    html = f"<!DOCTYPE html>\n<html>\n<body>\n{html}\n</body>\n</html>"
+    head = '<head> <meta charset="utf-8" /> <style> body { font-family: Helvetica, sans-serif; font-size: 14px; } </style> </head>'
+    html = f"<!DOCTYPE html>\n<html>\n{head}\n<body>\n{html}\n</body>\n</html>"
     output.parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w") as file:
         file.write(html)
