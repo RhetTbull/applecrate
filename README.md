@@ -95,7 +95,7 @@ Options:
 
 ## Credits
 
-Heavily inspired by [macOS Installer Buidler](https://github.com/KosalaHerath/macos-installer-builder) by [Kosala Herath](https://github.com/KosalaHerath). AppleCrate is a complete rewrite in Python but borrows many ideas from macOS Installer Builder and is thus licensed under the same Apache License, Version 2.0.
+Heavily inspired by [macOS Installer Builder](https://github.com/KosalaHerath/macos-installer-builder) by [Kosala Herath](https://github.com/KosalaHerath). AppleCrate is a complete rewrite in Python but borrows many ideas from macOS Installer Builder and is thus licensed under the same Apache License, Version 2.0.
 
 ## License
 
