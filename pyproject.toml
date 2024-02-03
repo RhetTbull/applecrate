@@ -1,0 +1,25 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[project]
+name = "applecrate"
+authors = [{ name = "Rhet Turnbull", email = "rturnbull+git@gmail.com" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+classifiers = ["License :: OSI Approved :: Apache Software License"]
+dynamic = ["version", "description"]
+dependencies = [
+    "Jinja2>=3.1.3",
+    "click>=8.1.7",
+    "markdown2>=2.4.12",
+    "toml>=0.10.2",
+]
+
+[project.urls]
+Home = "https://github.com/RhetTbull/applecrate"
+
+[tool.applecrate]
+app = "applecrate"
+version = "0.0.1"
+resources = [["Home Page", "https://github.com/rhettbull/"]]

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-script minSpecVersion="1.000000">
+    <title>{{ app }}</title>
+    { % if banner % }
+    <background mime-type="image/png" file="banner.png" scaling="proportional"/>
+    <background-darkAqua mime-type="image/png" file="banner.png" scaling="proportional"/>
+    { % endif % }
+    <welcome file="welcome.html" mime-type="text/html" />
+    <conclusion file="conclusion.html" mime-type="text/html" />
+    <license file="LICENSE.txt"/>
+    <options customize="never" allow-external-scripts="no"/>
+    <domains enable_localSystem="true" />
+    <installation-check script="installCheck();"/>
+    <script>
+function installCheck() {
+    if(!(system.compareVersions(system.version.ProductVersion, '10.15.0') >= 0)) {
+        my.result.title = 'Unable to install';
+        my.result.message = '{{ app }} requires Mac OS X 10.15 or later.';
+        my.result.type = 'Fatal';
+        return false;
+    }
+    if(system.files.fileExistsAtPath('/Library/{{ app }}/{{ version }}/')) {
+        my.result.title = 'Previous Installation Detected';
+        my.result.message = 'A previous installation of {{ app }} exists at /Library/{{ app }}/{{ version }}/. This installer will remove the previous installation prior to installing. Please back up any data before proceeding.';
+        my.result.type = 'Warning';
+        return false;
+    }
+    return true;
+}
+    </script>
+    <choices-outline>
+        <line choice="{{ app }}"/>
+    </choices-outline>
+    <choice id="{{ app }}" title="{{ app }}">
+        <pkg-ref id="{{ app }}.pkg"/>
+    </choice>
+    <pkg-ref id="{{ app }}.pkg" auth="Root">{{ app }}.pkg</pkg-ref>
+</installer-script>

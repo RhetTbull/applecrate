@@ -1,0 +1,15 @@
+.metrics
+.DS_store
+__pycache__/
+.coverage
+.condaauto
+.vscode/
+.tox/
+.idea/
+dist/
+build/
+.mypy_cache/
+*.pyc
+docsrc/_build/
+.python-version
+cov.xml
