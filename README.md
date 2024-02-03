@@ -44,8 +44,8 @@ Options:
   -a, --app TEXT                  App name
   -v, --version TEXT              App version
   -l, --license FILE              Path to license file
-  -w, --welcome PATH              Path to welcome markdown or HTML file
-  -c, --conclusion PATH           Path to conclusion markdown or HTML file
+  -w, --welcome FILE              Path to welcome markdown or HTML file
+  -c, --conclusion FILE           Path to conclusion markdown or HTML file
   -u, --uninstall FILE            Path to uninstall script; if not provided, an
                                   uninstall script will be created for you.See
                                   also '--no-uninstall'
