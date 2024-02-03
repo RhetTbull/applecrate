@@ -52,6 +52,20 @@ echo "Application uninstalling process started"
 #   echo "[1/3] [ERROR] Could not delete shortcut links" >&2
 # fi
 
+# remove links that were created
+{% if link %}
+{% for source, target in link %}
+echo "Removing link {{ target }}"
+[ -e "{{ target }}" ] && rm -rf "{{ target }}"
+if [ $? -eq 0 ]
+then
+    echo "[DONE] Successfully deleted link"
+else
+    echo "[ERROR] Could not delete link" >&2
+fi
+{% endfor %}
+{% endif %}
+
 {% if install %}
 # remove files that were installed
 {% for src, target in install %}

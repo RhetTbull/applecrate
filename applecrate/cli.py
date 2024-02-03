@@ -115,10 +115,18 @@ def cli():
     'For example: `--link "/Library/Application Support/{{ app }}/{{ version }}/app" "/usr/local/bin/{{ app }}-{{ version }}"` ',
 )
 @click.option(
-    "--post-install",
+    "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install script; " "if not provided, a post-install script will be created for you.",
+    help="Path to pre-install shell script; "
+    "if not provided, a pre-install script will be created for you.",
+)
+@click.option(
+    "--post-install",
+    "-P",
+    type=click.Path(dir_okay=False, exists=True),
+    help="Path to post-install shell script; "
+    "if not provided, a post-install script will be created for you.",
 )
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
@@ -150,6 +158,7 @@ def build(**kwargs):
     license = kwargs["license"]
     banner = kwargs["banner"]
     post_install = kwargs["post_install"]
+    pre_install = kwargs["pre_install"]
 
     # template data
     data = {
@@ -161,6 +170,7 @@ def build(**kwargs):
         "banner": banner,
         "link": link,
         "post_install": post_install,
+        "pre_install": pre_install,
     }
 
     echo(f"Building installer package for {app} version {version}.")
@@ -195,7 +205,14 @@ def build(**kwargs):
         pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
 
-    echo("Creating post-install scripts")
+    echo("Creating pre- and post-install scripts")
+
+    target = BUILD_DIR / "scripts" / "preinstall"
+    template = get_template("preinstall")
+    render_template(template, data, target)
+    pathlib.Path(target).chmod(0o755)
+    echo(f"Created {target}")
+
     target = BUILD_DIR / "scripts" / "postinstall"
     template = get_template("postinstall")
     render_template(template, data, target)
@@ -208,8 +225,14 @@ def build(**kwargs):
     pathlib.Path(target).chmod(0o755)
     echo(f"Created {target}")
 
+    if pre_install:
+        target = BUILD_DIR / "scripts" / "custom_preinstall"
+        copy_and_create_parents(pre_install, target)
+        pathlib.Path(target).chmod(0o755)
+        echo(f"Created {target}")
+
     if post_install:
-        target = BUILD_DIR / "scripts" / "postinstall_user"
+        target = BUILD_DIR / "scripts" / "custom_postinstall"
         copy_and_create_parents(post_install, target)
         pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
