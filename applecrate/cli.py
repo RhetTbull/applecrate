@@ -69,7 +69,7 @@ def cli():
     "-u",
     type=click.Path(dir_okay=False, exists=True),
     help="Path to uninstall script; "
-    "if not provided, an uninstall script will be created for you."
+    "if not provided, an uninstall script will be created for you. "
     "See also '--no-uninstall'",
 )
 @click.option(
