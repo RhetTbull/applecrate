@@ -13,7 +13,12 @@ pip install applecrate
 ## Simple Example
 
 ```bash
-applecrate build --app mytool --version 1.0.0 --license LICENSE --install dist/mytool "/usr/local/bin/{{ app }}-{{ version }}" --link /usr/local/bin/mytool "/usr/local/bin/{{ app }}-{{ version }}"
+applecrate build \
+--app mytool \
+--version 1.0.0 \
+--license LICENSE \
+--install dist/mytool "/usr/local/bin/{{ app }}-{{ version }}" \
+--link /usr/local/bin/mytool "/usr/local/bin/{{ app }}-{{ version }}"
 ```
 
 This will create a native macOS installer for the tool `dist/mytool` and install it to `/usr/local/bin/mytool-1.0.0`. It will create a symlink to the tool at `/usr/local/bin/mytool` and will also create an uninstaller to remove the tool.
