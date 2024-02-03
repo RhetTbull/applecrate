@@ -63,9 +63,7 @@ def check():
     "--uninstall",
     "-u",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to uninstall script; "
-    "if not provided, an uninstall script will be created for you."
-    "See also '--no-uninstall'",
+    help="Path to uninstall script; " "if not provided, an uninstall script will be created for you." "See also '--no-uninstall'",
 )
 @click.option(
     "--no-uninstall",
@@ -95,14 +93,17 @@ def check():
     nargs=2,
     multiple=True,
     help="Install FILE_OR_DIR to destination DEST; "
-    "DEST must be an absolute path, for example /usr/local/bin/app",
+    "DEST must be an absolute path, for example '/usr/local/bin/app'. "
+    r"DEST may include template variables {{ app }} and {{ version }}. "
+    'For example: `--install dist/app "/usr/local/bin/{{ app }}-{{ version }}"` '
+    "will install the file 'dist/app' to '/usr/local/bin/app-1.0.0' "
+    "if --app=app and --version=1.0.0.",
 )
 @click.option(
     "--post-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install script; "
-    "if not provided, a post-install script will be created for you.",
+    help="Path to post-install script; " "if not provided, a post-install script will be created for you.",
 )
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
@@ -113,10 +114,14 @@ def build(**kwargs):
     # the command line options take precedence
     toml_kwargs = load_from_toml("pyproject.toml")
     kwargs = set_from_defaults(kwargs, toml_kwargs)
+
     try:
         validate_build_kwargs(**kwargs)
     except ValueError as e:
         raise click.BadParameter(str(e))
+
+    # render templates in kwargs (e.g. for --install)
+    kwargs = render_build_kwargs(kwargs)
 
     app = kwargs["app"]
     version = kwargs["version"]
@@ -130,13 +135,6 @@ def build(**kwargs):
     banner = kwargs["banner"]
     post_install = kwargs["post_install"]
 
-    echo(f"Building installer package for {app} version {version}.")
-
-    echo("Cleaning build directory")
-    clean_build_dir(BUILD_DIR)
-    echo("Creating build directories")
-    create_build_dirs(BUILD_DIR)
-
     # template data
     data = {
         "app": app,
@@ -147,15 +145,18 @@ def build(**kwargs):
         "banner": banner,
     }
 
+    echo(f"Building installer package for {app} version {version}.")
+
+    echo("Cleaning build directory")
+    clean_build_dir(BUILD_DIR)
+    echo("Creating build directories")
+    create_build_dirs(BUILD_DIR)
+
     # Render the welcome and conclusion templates
     echo("Creating welcome.html")
-    create_html_file(
-        welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md"
-    )
+    create_html_file(welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md")
     echo("Creating conclusion.html")
-    create_html_file(
-        conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md"
-    )
+    create_html_file(conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md")
 
     echo("Copying license file")
     copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt")
@@ -167,15 +168,7 @@ def build(**kwargs):
     # Render the uninstall script
     if not no_uninstall:
         echo("Creating uninstall script")
-        target = (
-            BUILD_DIR
-            / "darwinpkg"
-            / "Library"
-            / "Application Support"
-            / app
-            / version
-            / "uninstall.sh"
-        )
+        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
         if uninstall:
             copy_and_create_parents(uninstall, target)
         else:
@@ -216,9 +209,22 @@ def build(**kwargs):
     build_product(app, version, BUILD_DIR)
 
 
-def set_from_defaults(
-    kwargs: dict[str, Any], defaults: dict[str, Any]
-) -> dict[str, Any]:
+def render_build_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+    """Render template variables in kwargs."""
+    rendered = copy.deepcopy(kwargs)
+    app = kwargs["app"]
+    version = kwargs["version"]
+    if install := rendered.get("install"):
+        new_install = []
+        for src, dest in install:
+            template = Template(str(dest))
+            dest = pathlib.Path(template.render(app=app, version=version))
+            new_install.append((src, dest))
+        rendered["install"] = new_install
+    return rendered
+
+
+def set_from_defaults(kwargs: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
     """Set values in kwargs from defaults if not provided or set to falsy value.
 
     Args:
@@ -270,14 +276,15 @@ def validate_build_kwargs(**kwargs):
         kwargs["uninstall"] = uninstall
 
     if install := kwargs.get("install"):
-        pathlib_install = [
-            (pathlib.Path(src), pathlib.Path(dest)) for src, dest in install
-        ]
-        for src, dest in pathlib_install:
+        pathlib_install = []
+        for src, dest in install:
+            src = pathlib.Path(src)
             if not src.exists():
                 raise ValueError(f"Install dir/file {src} does not exist")
+            dest = pathlib.Path(dest)
             if not dest.is_absolute():
                 raise ValueError(f"Install destination {dest} must be an absolute path")
+            pathlib_install.append((src, dest))
         kwargs["install"] = pathlib_install
 
     if banner := kwargs.get("banner"):
@@ -355,19 +362,17 @@ def load_template_from_file(path: pathlib.Path) -> Template:
 def get_template(name: str) -> Template:
     """Load a Jinja2 template from the package."""
 
-    env = Environment(
-        loader=PackageLoader("applecrate", "templates"), autoescape=select_autoescape()
-    )
+    env = Environment(loader=PackageLoader("applecrate", "templates"), autoescape=select_autoescape())
     return env.get_template(name)
 
 
-def render_markdown_template(
-    template: Template, data: dict[str, str], output: pathlib.Path
-):
+def render_markdown_template(template: Template, data: dict[str, str], output: pathlib.Path):
     """Render and save a Jinja2 template to a file, converting markdown to HTML."""
     md = template.render(**data)
     html = markdown2.markdown(md, extras=MARKDOWN_EXTRAS)
-    head = '<head> <meta charset="utf-8" /> <style> body { font-family: Helvetica, sans-serif; font-size: 14px; } </style> </head>'
+    head = (
+        '<head> <meta charset="utf-8" /> <style> body { font-family: Helvetica, sans-serif; font-size: 14px; } </style> </head>'
+    )
     html = f"<!DOCTYPE html>\n<html>\n{head}\n<body>\n{html}\n</body>\n</html>"
     output.parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w") as file:
@@ -447,9 +452,7 @@ def build_package(app: str, version: str, target_directory: str):
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(
-            f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise click.ClickException(f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     echo(f"Created {pkg}")
 
 
@@ -471,7 +474,5 @@ def build_product(app: str, version: str, target_directory: str):
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(
-            f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise click.ClickException(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     echo(f"Created {product}")
