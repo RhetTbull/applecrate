@@ -17,6 +17,7 @@ This project uses [Flit](https://flit.readthedocs.io/en/latest/).  It is a simpl
 Linting and formatting utilizes [ruff](https://github.com/astral-sh/ruff)
 
 - `ruff check`
+- `ruff check --select I --fix`
 - `ruff format`
 
 ## Building
