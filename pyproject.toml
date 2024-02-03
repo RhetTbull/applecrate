@@ -21,8 +21,17 @@ lint = ["ruff>=0.1.14"]
 
 [project.urls]
 Home = "https://github.com/RhetTbull/applecrate"
+Issues = "https://github.com/RhetTbull/applecrate/issues"
+Source = "https://github.com/RhetTbull/applecrate"
 
-[tool.applecrate]
-app = "applecrate"
-version = "0.0.1"
-resources = [["Home Page", "https://github.com/rhettbull/"]]
+[project.scripts]
+applecrate = "applecrate.cli:cli"
+
+[tool.flit.sdist]
+exclude = ["site/**/*", "tests/**/*"]
+
+[tool.mypy]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 130
