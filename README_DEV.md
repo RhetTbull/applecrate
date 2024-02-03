@@ -28,3 +28,11 @@ Linting and formatting utilizes [ruff](https://github.com/astral-sh/ruff)
 ## Publishing
 
 - `flit publish`
+
+## Updating the README
+
+- `cog -r README.md`
+
+## Updating version
+
+- `bump2version [patch|minor|major] --verbose [--dry-run]`

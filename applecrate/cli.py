@@ -55,20 +55,22 @@ def cli():
 @click.option(
     "--welcome",
     "-w",
-    type=click.Path(exists=True),
+    type=click.Path(dir_okay=False, exists=True),
     help="Path to welcome markdown or HTML file",
 )
 @click.option(
     "--conclusion",
     "-c",
-    type=click.Path(exists=True),
+    type=click.Path(dir_okay=False, exists=True),
     help="Path to conclusion markdown or HTML file",
 )
 @click.option(
     "--uninstall",
     "-u",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to uninstall script; " "if not provided, an uninstall script will be created for you." "See also '--no-uninstall'",
+    help="Path to uninstall script; "
+    "if not provided, an uninstall script will be created for you."
+    "See also '--no-uninstall'",
 )
 @click.option(
     "--no-uninstall",
@@ -182,9 +184,13 @@ def build(**kwargs):
 
     # Render the welcome and conclusion templates
     echo("Creating welcome.html")
-    create_html_file(welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md")
+    create_html_file(
+        welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md"
+    )
     echo("Creating conclusion.html")
-    create_html_file(conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md")
+    create_html_file(
+        conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md"
+    )
 
     echo("Copying license file")
     copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt")
@@ -196,7 +202,15 @@ def build(**kwargs):
     # Render the uninstall script
     if not no_uninstall:
         echo("Creating uninstall script")
-        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
+        target = (
+            BUILD_DIR
+            / "darwinpkg"
+            / "Library"
+            / "Application Support"
+            / app
+            / version
+            / "uninstall.sh"
+        )
         if uninstall:
             copy_and_create_parents(uninstall, target)
         else:
