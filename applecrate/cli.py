@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 
 import click
 import toml
@@ -109,15 +110,13 @@ def cli():
     "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to pre-install shell script; "
-    "if not provided, a pre-install script will be created for you.",
+    help="Path to pre-install shell script; " "if not provided, a pre-install script will be created for you.",
 )
 @click.option(
     "--post-install",
     "-P",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install shell script; "
-    "if not provided, a post-install script will be created for you.",
+    help="Path to post-install shell script; " "if not provided, a post-install script will be created for you.",
 )
 @click.option(
     "--sign",
@@ -133,10 +132,15 @@ def build(**kwargs):
 
     check_dependencies(verbose=echo)
 
-    # If both pyproject.toml and command line options are provided,
-    # the command line options take precedence
-    toml_kwargs = load_from_toml("pyproject.toml")
-    kwargs = set_from_defaults(kwargs, toml_kwargs)
+    # configure precedence:
+    # command line arguments take precedence over configuration files
+    # applecrate.toml takes precedence over pyproject.toml
+    # load in reverse order of precedence as the subsequent load will only
+    # be used if the key is not already set
+    if pathlib.Path("applecrate.toml").exists():
+        kwargs = set_from_defaults(kwargs, load_from_toml("applecrate.toml"))
+    if pathlib.Path("pyproject.toml").exists():
+        kwargs = set_from_defaults(kwargs, load_from_toml("pyproject.toml"))
     try:
         validate_build_kwargs(**kwargs)
     except ValueError as e:
@@ -145,7 +149,20 @@ def build(**kwargs):
 
 
 def load_from_toml(path: str | os.PathLike) -> dict[str, str]:
-    """Load the [tool.applecrate] from a TOML file."""
+    """Load configuration from a TOML file.
 
+    Args:
+        path: The path to the TOML file.
+
+    Returns: A dictionary of configuration values.
+
+    Note: if the toml file is named 'pyproject.toml' then the configuration
+    will be loaded from the 'tool.applecrate' section; otherwise, the configuration
+    will be loaded from the root of the file.
+    """
+    path = pathlib.Path(path)
     data = toml.load(str(path))
-    return data.get("tool", {}).get("applecrate", {})
+    if path.name == "pyproject.toml":
+        return data.get("tool", {}).get("applecrate", {})
+    else:
+        return data
