@@ -53,7 +53,7 @@ Options:
   -w, --welcome FILE              Path to welcome markdown or HTML file
   -c, --conclusion FILE           Path to conclusion markdown or HTML file
   -u, --uninstall FILE            Path to uninstall script; if not provided, an
-                                  uninstall script will be created for you.See
+                                  uninstall script will be created for you. See
                                   also '--no-uninstall'
   -U, --no-uninstall              Do not include an uninstall script in the
                                   package
@@ -84,6 +84,8 @@ Options:
   -P, --post-install FILE         Path to post-install shell script; if not
                                   provided, a post-install script will be
                                   created for you.
+  -s, --sign APPLE_DEVELOPER_CERTIFICATE_ID
+                                  Sign the installer package with a developer ID
   --help                          Show this message and exit.
 
 ```
@@ -91,7 +93,7 @@ Options:
 
 ## To Do
 
-- [ ] Add support for signing the installer with a developer certificate
+- [X] Add support for signing the installer with a developer certificate
 - [ ] Add support for notarizing the installer
 - [ ] Add python API to create installers programmatically
 - [ ] Add `applecrate init` command to create a TOML configuration via a wizard

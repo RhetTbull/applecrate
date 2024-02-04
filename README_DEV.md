@@ -31,7 +31,8 @@ Linting and formatting utilizes [ruff](https://github.com/astral-sh/ruff)
 
 ## Updating the README
 
-- `cog -r README.md`
+- `flit install` to install the latest version of the package
+- `cog -r README.md` to update the CLI help in README.md
 
 ## Updating version
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 import shutil
 import subprocess
@@ -67,6 +68,10 @@ def check_dependencies():
         raise click.ClickException("pkgbuild is not installed")
     if not shutil.which("productbuild"):
         raise click.ClickException("productbuild is not installed")
+    if not shutil.which("productsign"):
+        raise click.ClickException("productsign is not installed")
+    if not shutil.which("pkgutil"):
+        raise click.ClickException("pkgutil is not installed")
 
 
 def build_package(app: str, version: str, target_directory: str):
@@ -113,6 +118,37 @@ def build_product(app: str, version: str, target_directory: str):
     if proc.returncode != 0:
         raise click.ClickException(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     echo(f"Created {product}")
+
+
+def sign_product(
+    product_path: str | os.PathLike,
+    signed_product_path: str | os.PathLike,
+    certificate_id: str,
+):
+    """Sign the macOS installer package."""
+    proc = subprocess.run(
+        [
+            "productsign",
+            "--sign",
+            f"Developer ID Installer: {certificate_id}",
+            str(product_path),
+            str(signed_product_path),
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if proc.returncode != 0:
+        raise click.ClickException(f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+    echo(f"Signed {product_path} to {signed_product_path}")
+
+    proc = subprocess.run(
+        ["pkgutil", "--check-signature", signed_product_path],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    if proc.returncode != 0:
+        raise click.ClickException(f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+    echo(f"Checked signature of {signed_product_path}")
 
 
 def stage_install_files(src: str, dest: str, build_dir: pathlib.Path):

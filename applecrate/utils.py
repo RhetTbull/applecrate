@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import pathlib
 import shutil
+import subprocess
 from typing import Any
 
 from click import echo
@@ -31,3 +32,16 @@ def copy_and_create_parents(src: pathlib.Path, dst: pathlib.Path):
     echo(f"Copying {src} to {dst}")
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(src, dst)
+
+
+def check_certificate_is_valid(certificate: str) -> bool:
+    """Check if a certificate is valid.
+
+    Args:
+        certificate: The certificate to check.
+
+    Returns: True if the certificate is valid, False otherwise.
+    """
+
+    status = subprocess.run(["security", "find-identity", "-v"], capture_output=True)
+    return certificate in status.stdout.decode("utf-8")

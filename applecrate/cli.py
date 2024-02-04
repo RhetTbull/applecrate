@@ -21,6 +21,7 @@ from .build import (
     check_dependencies,
     clean_build_dir,
     create_build_dirs,
+    sign_product,
     stage_install_files,
 )
 from .template_utils import (
@@ -29,7 +30,11 @@ from .template_utils import (
     render_template,
     render_template_from_file,
 )
-from .utils import copy_and_create_parents, set_from_defaults
+from .utils import (
+    check_certificate_is_valid,
+    copy_and_create_parents,
+    set_from_defaults,
+)
 
 
 @click.group()
@@ -135,6 +140,12 @@ def cli():
     type=click.Path(dir_okay=False, exists=True),
     help="Path to post-install shell script; " "if not provided, a post-install script will be created for you.",
 )
+@click.option(
+    "--sign",
+    "-s",
+    metavar="APPLE_DEVELOPER_CERTIFICATE_ID",
+    help="Sign the installer package with a developer ID",
+)
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
 
@@ -166,6 +177,7 @@ def build(**kwargs):
     banner = kwargs["banner"]
     post_install = kwargs["post_install"]
     pre_install = kwargs["pre_install"]
+    sign = kwargs["sign"]
 
     # template data
     data = {
@@ -265,10 +277,19 @@ def build(**kwargs):
     # Build the macOS installer product
     echo("Building the macOS installer product")
     build_product(app, version, BUILD_DIR)
+    product = f"{app}-{version}.pkg"
+    product_path = BUILD_DIR / "pkg" / product
+
+    # sign the installer package
+    if sign:
+        signed_product_path = BUILD_DIR / "pkg-signed" / f"{app}-{version}.pkg"
+        signed_product_path.parent.mkdir(parents=True, exist_ok=True)
+        echo(f"Signing the installer package with certificate ID: {sign}")
+        sign_product(product_path, signed_product_path, sign)
 
     echo("Copying installer package to build directory")
-    product = f"{app}-{version}.pkg"
-    shutil.copy(BUILD_DIR / "pkg" / product, BUILD_ROOT / product)
+    product_path = product_path if not sign else signed_product_path
+    shutil.copy(product_path, BUILD_ROOT / product)
 
     echo(f"Created {BUILD_ROOT / product}")
     echo("Done!")
@@ -363,6 +384,10 @@ def validate_build_kwargs(**kwargs):
         if banner.suffix.lower() != ".png":
             raise ValueError("Banner image must be a PNG file")
         kwargs["banner"] = banner
+
+    if sign := kwargs.get("sign"):
+        if not check_certificate_is_valid(sign):
+            raise ValueError(f"Invalid certificate ID: {sign}")
 
 
 def load_from_toml(path: str | os.PathLike) -> dict[str, str]:
