@@ -20,6 +20,10 @@ Linting and formatting utilizes [ruff](https://github.com/astral-sh/ruff)
 - `ruff check --select I --fix`
 - `ruff format`
 
+## Type Checking
+
+- `mypy applecrate`
+
 ## Building
 
 - `rm -rf dist && rm -rf build`

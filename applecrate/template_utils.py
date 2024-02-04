@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import pathlib
+from typing import Any, Callable
 
 import markdown2
-from click import echo
 from jinja2 import Environment, PackageLoader, Template, select_autoescape
 
 # extra features to support for Markdown to HTML conversion with markdown2
@@ -39,7 +39,7 @@ def render_markdown_template(template: Template, data: dict[str, str], output: p
         file.write(html)
 
 
-def render_template(template: Template, data: dict[str, str], output: pathlib.Path):
+def render_template(template: Template, data: dict[str, Any], output: pathlib.Path):
     """Render and save a Jinja2 template to a file."""
     rendered = template.render(**data)
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -47,7 +47,7 @@ def render_template(template: Template, data: dict[str, str], output: pathlib.Pa
         file.write(rendered)
 
 
-def render_template_from_file(filepath: str | os.PathLike, data: dict[str, str], output: pathlib.Path):
+def render_template_from_file(filepath: pathlib.Path, data: dict[str, Any], output: pathlib.Path):
     """Render and save a Jinja2 template to a file."""
     template = load_template_from_file(filepath)
     rendered = template.render(**data)
@@ -61,6 +61,7 @@ def create_html_file(
     output_path: pathlib.Path,
     data: dict[str, str],
     default_template: str,
+    verbose: Callable[..., None],
 ):
     """Create an HTML file from a markdown or HTML file and render with Jinja2."""
 
@@ -75,4 +76,4 @@ def create_html_file(
     else:
         render_template(template, data, output_path)
 
-    echo(f"Created {output_path}")
+    verbose(f"Created {output_path}")

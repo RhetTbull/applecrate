@@ -6,9 +6,7 @@ import copy
 import pathlib
 import shutil
 import subprocess
-from typing import Any
-
-from click import echo
+from typing import Any, Callable
 
 
 def set_from_defaults(kwargs: dict[str, Any], defaults: dict[str, Any]) -> dict[str, Any]:
@@ -27,9 +25,9 @@ def set_from_defaults(kwargs: dict[str, Any], defaults: dict[str, Any]) -> dict[
     return updated
 
 
-def copy_and_create_parents(src: pathlib.Path, dst: pathlib.Path):
+def copy_and_create_parents(src: pathlib.Path, dst: pathlib.Path, verbose: Callable[..., None]):
     """Copy a file to a destination and create any necessary parent directories."""
-    echo(f"Copying {src} to {dst}")
+    verbose(f"Copying {src} to {dst}")
     dst.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(src, dst)
 

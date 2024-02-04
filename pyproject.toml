@@ -17,7 +17,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["bump2version>=1.0.1,<2.0.0", "cogapp>=3.3.0,<4.0.0"]
+dev = [
+    "bump2version>=1.0.1,<2.0.0",
+    "cogapp>=3.3.0,<4.0.0",
+    "mypy>=1.8.0",
+    "types-toml",
+]
 lint = ["ruff>=0.1.14"]
 
 [project.urls]

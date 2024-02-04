@@ -2,37 +2,14 @@
 
 from __future__ import annotations
 
-import copy
 import os
-import pathlib
-import shutil
-from typing import Any
 
 import click
 import toml
 from click import echo
-from jinja2 import Template
 
-from .build import (
-    BUILD_DIR,
-    BUILD_ROOT,
-    build_package,
-    build_product,
-    check_dependencies,
-    clean_build_dir,
-    create_build_dirs,
-    sign_product,
-    stage_install_files,
-)
-from .template_utils import (
-    create_html_file,
-    get_template,
-    render_template,
-    render_template_from_file,
-)
+from .build import build_installer, check_dependencies, validate_build_kwargs
 from .utils import (
-    check_certificate_is_valid,
-    copy_and_create_parents,
     set_from_defaults,
 )
 
@@ -149,249 +126,21 @@ def cli():
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
 
-    check_dependencies()
+    check_dependencies(verbose=echo)
 
     # If both pyproject.toml and command line options are provided,
     # the command line options take precedence
     toml_kwargs = load_from_toml("pyproject.toml")
     kwargs = set_from_defaults(kwargs, toml_kwargs)
-
     try:
         validate_build_kwargs(**kwargs)
     except ValueError as e:
         raise click.BadParameter(str(e))
-
-    # render templates in kwargs (e.g. for --install)
-    kwargs = render_build_kwargs(kwargs)
-
-    app = kwargs["app"]
-    version = kwargs["version"]
-    welcome = kwargs["welcome"]
-    conclusion = kwargs["conclusion"]
-    uninstall = kwargs["uninstall"]
-    no_uninstall = kwargs["no_uninstall"]
-    url = kwargs["url"]
-    install = kwargs["install"]
-    link = kwargs["link"]
-    license = kwargs["license"]
-    banner = kwargs["banner"]
-    post_install = kwargs["post_install"]
-    pre_install = kwargs["pre_install"]
-    sign = kwargs["sign"]
-
-    # template data
-    data = {
-        "app": app,
-        "version": version,
-        "uninstall": not no_uninstall,
-        "url": url,
-        "install": install,
-        "banner": banner,
-        "link": link,
-        "post_install": post_install,
-        "pre_install": pre_install,
-    }
-
-    echo(f"Building installer package for {app} version {version}.")
-
-    echo("Cleaning build directory")
-    clean_build_dir(BUILD_DIR)
-    echo("Creating build directories")
-    create_build_dirs(BUILD_DIR)
-
-    # Render the welcome and conclusion templates
-    echo("Creating welcome.html")
-    create_html_file(welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md")
-
-    echo("Creating conclusion.html")
-    create_html_file(conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md")
-
-    echo("Copying license file")
-    copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt")
-
-    echo("Copying install files")
-    for src, dst in install:
-        stage_install_files(src, dst, BUILD_DIR)
-
-    # Render the uninstall script
-    if not no_uninstall:
-        echo("Creating uninstall script")
-        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
-        if uninstall:
-            render_template(uninstall, data, target)
-        else:
-            template = get_template("uninstall.sh")
-            render_template(template, data, target)
-        pathlib.Path(target).chmod(0o755)
-        echo(f"Created {target}")
-
-    echo("Creating pre- and post-install scripts")
-
-    target = BUILD_DIR / "scripts" / "preinstall"
-    template = get_template("preinstall")
-    render_template(template, data, target)
-    pathlib.Path(target).chmod(0o755)
-    echo(f"Created {target}")
-
-    target = BUILD_DIR / "scripts" / "postinstall"
-    template = get_template("postinstall")
-    render_template(template, data, target)
-    pathlib.Path(target).chmod(0o755)
-    echo(f"Created {target}")
-
-    target = BUILD_DIR / "scripts" / "links"
-    template = get_template("links")
-    render_template(template, data, target)
-    pathlib.Path(target).chmod(0o755)
-    echo(f"Created {target}")
-
-    if pre_install:
-        target = BUILD_DIR / "scripts" / "custom_preinstall"
-        render_template_from_file(pre_install, data, target)
-        pathlib.Path(target).chmod(0o755)
-        echo(f"Created {target}")
-
-    if post_install:
-        target = BUILD_DIR / "scripts" / "custom_postinstall"
-        render_template_from_file(post_install, data, target)
-        pathlib.Path(target).chmod(0o755)
-        echo(f"Created {target}")
-
-    if banner:
-        echo("Copying banner image")
-        target = BUILD_DIR / "Resources" / "banner.png"
-        copy_and_create_parents(banner, target)
-        echo(f"Created {target}")
-
-    echo("Creating distribution file")
-    target = BUILD_DIR / "Distribution"
-    template = get_template("Distribution")
-    render_template(template, data, target)
-    pathlib.Path(target).chmod(0o755)
-    echo(f"Created {target}")
-
-    # Build the macOS installer package
-    echo("Building the macOS installer package")
-    build_package(app, version, BUILD_DIR)
-
-    # Build the macOS installer product
-    echo("Building the macOS installer product")
-    build_product(app, version, BUILD_DIR)
-    product = f"{app}-{version}.pkg"
-    product_path = BUILD_DIR / "pkg" / product
-
-    # sign the installer package
-    if sign:
-        signed_product_path = BUILD_DIR / "pkg-signed" / f"{app}-{version}.pkg"
-        signed_product_path.parent.mkdir(parents=True, exist_ok=True)
-        echo(f"Signing the installer package with certificate ID: {sign}")
-        sign_product(product_path, signed_product_path, sign)
-
-    echo("Copying installer package to build directory")
-    product_path = product_path if not sign else signed_product_path
-    shutil.copy(product_path, BUILD_ROOT / product)
-
-    echo(f"Created {BUILD_ROOT / product}")
-    echo("Done!")
-
-
-def render_build_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
-    """Render template variables in kwargs."""
-    rendered = copy.deepcopy(kwargs)
-    app = kwargs["app"]
-    version = kwargs["version"]
-    if install := rendered.get("install"):
-        new_install = []
-        for src, dest in install:
-            template = Template(str(dest))
-            dest = pathlib.Path(template.render(app=app, version=version))
-            new_install.append((src, dest))
-        rendered["install"] = new_install
-
-    if link := rendered.get("link"):
-        new_link = []
-        for src, target in link:
-            src_template = Template(str(src))
-            target_template = Template(str(target))
-            src = pathlib.Path(src_template.render(app=app, version=version))
-            target = pathlib.Path(target_template.render(app=app, version=version))
-            new_link.append((src, target))
-        rendered["link"] = new_link
-    return rendered
-
-
-def validate_build_kwargs(**kwargs):
-    """Validate the build command arguments."""
-
-    # version and app must be provided
-    if not kwargs.get("app"):
-        raise ValueError("App name must be provided")
-
-    if not kwargs.get("version"):
-        raise ValueError("Version must be provided")
-
-    if not kwargs.get("license"):
-        raise ValueError("License file must be provided")
-    kwargs["license"] = pathlib.Path(kwargs["license"])
-
-    if kwargs.get("no_uninstall") and kwargs.get("uninstall"):
-        raise ValueError("Cannot specify both --uninstall and --no-uninstall")
-
-    if welcome := kwargs.get("welcome"):
-        welcome = pathlib.Path(welcome)
-        if welcome.suffix.lower() not in [".md", ".markdown", ".html"]:
-            raise ValueError("Welcome file must be a markdown or HTML file")
-        kwargs["welcome"] = welcome
-
-    if conclusion := kwargs.get("conclusion"):
-        conclusion = pathlib.Path(conclusion)
-        if conclusion.suffix.lower() not in [".md", ".markdown", ".html"]:
-            raise ValueError("Conclusion file must be a markdown or HTML file")
-        kwargs["conclusion"] = conclusion
-
-    if uninstall := kwargs.get("uninstall"):
-        uninstall = pathlib.Path(uninstall)
-        if uninstall.suffix.lower() != ".sh":
-            raise ValueError("Uninstall script must be a shell script")
-        kwargs["uninstall"] = uninstall
-
-    if install := kwargs.get("install"):
-        pathlib_install = []
-        for src, dest in install:
-            src = pathlib.Path(src)
-            if not src.exists():
-                raise ValueError(f"Install dir/file {src} does not exist")
-            dest = pathlib.Path(dest)
-            if not dest.is_absolute():
-                raise ValueError(f"Install destination {dest} must be an absolute path")
-            pathlib_install.append((src, dest))
-        kwargs["install"] = pathlib_install
-
-    if link := kwargs.get("link"):
-        pathlib_link = []
-        for src, target in link:
-            src = pathlib.Path(src)
-            target = pathlib.Path(target)
-            if not src.is_absolute():
-                raise ValueError(f"Link source {src} must be an absolute path")
-            if not target.is_absolute():
-                raise ValueError(f"Link target {target} must be an absolute path")
-            pathlib_link.append((src, target))
-        kwargs["link"] = pathlib_link
-
-    if banner := kwargs.get("banner"):
-        banner = pathlib.Path(banner)
-        if banner.suffix.lower() != ".png":
-            raise ValueError("Banner image must be a PNG file")
-        kwargs["banner"] = banner
-
-    if sign := kwargs.get("sign"):
-        if not check_certificate_is_valid(sign):
-            raise ValueError(f"Invalid certificate ID: {sign}")
+    build_installer(**kwargs, verbose=echo)
 
 
 def load_from_toml(path: str | os.PathLike) -> dict[str, str]:
     """Load the [tool.applecrate] from a TOML file."""
 
-    data = toml.load(path)
+    data = toml.load(str(path))
     return data.get("tool", {}).get("applecrate", {})
