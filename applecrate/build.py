@@ -112,7 +112,9 @@ def build_installer(
     )
 
     verbose("Copying license file")
-    copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt", verbose=verbose)
+    copy_and_create_parents(
+        license, BUILD_DIR / "Resources" / "LICENSE.txt", verbose=verbose
+    )
 
     verbose("Copying install files")
     for src, dst in install:
@@ -121,7 +123,15 @@ def build_installer(
     # Render the uninstall script
     if not no_uninstall:
         verbose("Creating uninstall script")
-        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
+        target = (
+            BUILD_DIR
+            / "darwinpkg"
+            / "Library"
+            / "Application Support"
+            / app
+            / version
+            / "uninstall.sh"
+        )
         if uninstall:
             render_template_from_file(uninstall, data, target)
         else:
@@ -291,8 +301,16 @@ def validate_build_kwargs(**kwargs):
         kwargs["banner"] = banner
 
     if sign := kwargs.get("sign"):
+        if sign.startswith("Developer ID Installer:"):
+            sign = sign[23:]
+        if sign.startswith("$"):
+            # get the value of the environment variable
+            sign = os.environ.get(sign[1:])
+            if not sign:
+                raise ValueError(f"Environment variable {sign[1:]} is not set")
         if not check_certificate_is_valid(sign):
             raise ValueError(f"Invalid certificate ID: {sign}")
+        kwargs["sign"] = sign
 
 
 def clean_build_dir(build_dir: pathlib.Path):
@@ -353,7 +371,9 @@ def check_dependencies(verbose: Callable[..., None]):
         raise click.ClickException("pkgutil is not installed")
 
 
-def build_package(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
+def build_package(
+    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
+):
     """Build the macOS installer package."""
     pkg = f"{target_directory}/package/{app}.pkg"
     proc = subprocess.run(
@@ -373,11 +393,15 @@ def build_package(app: str, version: str, target_directory: pathlib.Path, verbos
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise click.ClickException(
+            f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Created {pkg}")
 
 
-def build_product(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
+def build_product(
+    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
+):
     """Build the macOS installer package."""
     product = f"{target_directory}/pkg/{app}-{version}.pkg"
     proc = subprocess.run(
@@ -395,7 +419,9 @@ def build_product(app: str, version: str, target_directory: pathlib.Path, verbos
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise click.ClickException(
+            f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Created {product}")
 
 
@@ -418,7 +444,9 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise click.ClickException(
+            f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Signed {product_path} to {signed_product_path}")
 
     proc = subprocess.run(
@@ -427,7 +455,9 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise click.ClickException(
+            f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Checked signature of {signed_product_path}")
 
 

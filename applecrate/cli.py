@@ -109,19 +109,24 @@ def cli():
     "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to pre-install shell script; " "if not provided, a pre-install script will be created for you.",
+    help="Path to pre-install shell script; "
+    "if not provided, a pre-install script will be created for you.",
 )
 @click.option(
     "--post-install",
     "-P",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install shell script; " "if not provided, a post-install script will be created for you.",
+    help="Path to post-install shell script; "
+    "if not provided, a post-install script will be created for you.",
 )
 @click.option(
     "--sign",
     "-s",
     metavar="APPLE_DEVELOPER_CERTIFICATE_ID",
-    help="Sign the installer package with a developer ID",
+    help="Sign the installer package with a developer ID. "
+    "If APPLE_DEVELOPER_CERTIFICATE_ID starts with '$', "
+    "it will be treated as an environment variable "
+    "and the value of the environment variable will be used as the developer ID.",
 )
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
