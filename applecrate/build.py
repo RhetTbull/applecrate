@@ -11,7 +11,8 @@ from click import echo
 
 from .utils import copy_and_create_parents
 
-BUILD_DIR = pathlib.Path("build/darwin")
+BUILD_DIR = pathlib.Path("build/applecrate/darwin")
+BUILD_ROOT = pathlib.Path("build")
 
 
 def clean_build_dir(build_dir: pathlib.Path):

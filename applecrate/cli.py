@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import os
 import pathlib
+import shutil
 from typing import Any
 
 import click
@@ -14,6 +15,7 @@ from jinja2 import Template
 
 from .build import (
     BUILD_DIR,
+    BUILD_ROOT,
     build_package,
     build_product,
     check_dependencies,
@@ -21,7 +23,12 @@ from .build import (
     create_build_dirs,
     stage_install_files,
 )
-from .template_utils import create_html_file, get_template, render_template, render_template_from_file
+from .template_utils import (
+    create_html_file,
+    get_template,
+    render_template,
+    render_template_from_file,
+)
 from .utils import copy_and_create_parents, set_from_defaults
 
 
@@ -258,6 +265,13 @@ def build(**kwargs):
     # Build the macOS installer product
     echo("Building the macOS installer product")
     build_product(app, version, BUILD_DIR)
+
+    echo("Copying installer package to build directory")
+    product = f"{app}-{version}.pkg"
+    shutil.copy(BUILD_DIR / "pkg" / product, BUILD_ROOT / product)
+
+    echo(f"Created {BUILD_ROOT / product}")
+    echo("Done!")
 
 
 def render_build_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
