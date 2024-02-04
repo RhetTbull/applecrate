@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import pathlib
 
 import markdown2
@@ -40,6 +41,15 @@ def render_markdown_template(template: Template, data: dict[str, str], output: p
 
 def render_template(template: Template, data: dict[str, str], output: pathlib.Path):
     """Render and save a Jinja2 template to a file."""
+    rendered = template.render(**data)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    with open(output, "w") as file:
+        file.write(rendered)
+
+
+def render_template_from_file(filepath: str | os.PathLike, data: dict[str, str], output: pathlib.Path):
+    """Render and save a Jinja2 template to a file."""
+    template = load_template_from_file(filepath)
     rendered = template.render(**data)
     output.parent.mkdir(parents=True, exist_ok=True)
     with open(output, "w") as file:

@@ -21,7 +21,7 @@ from .build import (
     create_build_dirs,
     stage_install_files,
 )
-from .template_utils import create_html_file, get_template, render_template
+from .template_utils import create_html_file, get_template, render_template, render_template_from_file
 from .utils import copy_and_create_parents, set_from_defaults
 
 
@@ -120,15 +120,13 @@ def cli():
     "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to pre-install shell script; "
-    "if not provided, a pre-install script will be created for you.",
+    help="Path to pre-install shell script; " "if not provided, a pre-install script will be created for you.",
 )
 @click.option(
     "--post-install",
     "-P",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install shell script; "
-    "if not provided, a post-install script will be created for you.",
+    help="Path to post-install shell script; " "if not provided, a post-install script will be created for you.",
 )
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
@@ -184,13 +182,10 @@ def build(**kwargs):
 
     # Render the welcome and conclusion templates
     echo("Creating welcome.html")
-    create_html_file(
-        welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md"
-    )
+    create_html_file(welcome, BUILD_DIR / "Resources" / "welcome.html", data, "welcome.md")
+
     echo("Creating conclusion.html")
-    create_html_file(
-        conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md"
-    )
+    create_html_file(conclusion, BUILD_DIR / "Resources" / "conclusion.html", data, "conclusion.md")
 
     echo("Copying license file")
     copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt")
@@ -202,17 +197,9 @@ def build(**kwargs):
     # Render the uninstall script
     if not no_uninstall:
         echo("Creating uninstall script")
-        target = (
-            BUILD_DIR
-            / "darwinpkg"
-            / "Library"
-            / "Application Support"
-            / app
-            / version
-            / "uninstall.sh"
-        )
+        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
         if uninstall:
-            copy_and_create_parents(uninstall, target)
+            render_template(uninstall, data, target)
         else:
             template = get_template("uninstall.sh")
             render_template(template, data, target)
@@ -241,13 +228,13 @@ def build(**kwargs):
 
     if pre_install:
         target = BUILD_DIR / "scripts" / "custom_preinstall"
-        copy_and_create_parents(pre_install, target)
+        render_template_from_file(pre_install, data, target)
         pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
 
     if post_install:
         target = BUILD_DIR / "scripts" / "custom_postinstall"
-        copy_and_create_parents(post_install, target)
+        render_template_from_file(post_install, data, target)
         pathlib.Path(target).chmod(0o755)
         echo(f"Created {target}")
 

@@ -23,6 +23,12 @@ applecrate build \
 
 This will create a native macOS installer for the tool `dist/mytool` which will install it to `/usr/local/bin/mytool-1.0.0`. The installer will create a symlink to the tool at `/usr/local/bin/mytool` and will also create an uninstaller to remove the tool.
 
+## How It Works
+
+AppleCrate is a Python application that uses the `pkgbuild` and `productbuild` command line tools to create a macOS installer package. AppleCrate does not do anything that you couldn't do yourself with these tools, but it automates the process and provide a simple command line interface. Creating a macOS installer package is a multi-step process that requires the generation of multiple files such as HTML files for the welcome screen, pre and post install scripts, Distribution XML file, etc. AppleCrate takes care of all of this for you but also allows you to customize the installer by providing your own files for these steps.
+
+AppleCrate uses [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/) templates to generate the files required for the installer. This allows you to use template variables in your files or command line parameters to customize the installer. For example, you can use `{{ app }}` and `{{ version }}` in your files to refer to the app name and version you provide on the command line.
+
 ## Usage
 
 <!--[[[cog
