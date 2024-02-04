@@ -10,7 +10,6 @@ import subprocess
 from collections.abc import Iterable
 from typing import Any, Callable
 
-import click
 from jinja2 import Template
 
 from .template_utils import (
@@ -112,7 +111,9 @@ def build_installer(
     )
 
     verbose("Copying license file")
-    copy_and_create_parents(license, BUILD_DIR / "Resources" / "LICENSE.txt", verbose=verbose)
+    copy_and_create_parents(
+        license, BUILD_DIR / "Resources" / "LICENSE.txt", verbose=verbose
+    )
 
     verbose("Copying install files")
     for src, dst in install:
@@ -121,7 +122,15 @@ def build_installer(
     # Render the uninstall script
     if not no_uninstall:
         verbose("Creating uninstall script")
-        target = BUILD_DIR / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
+        target = (
+            BUILD_DIR
+            / "darwinpkg"
+            / "Library"
+            / "Application Support"
+            / app
+            / version
+            / "uninstall.sh"
+        )
         if uninstall:
             render_template_from_file(uninstall, data, target)
         else:
@@ -352,16 +361,18 @@ def check_dependencies(verbose: Callable[..., None]):
     """Check for dependencies."""
     verbose("Checking for dependencies.")
     if not shutil.which("pkgbuild"):
-        raise click.ClickException("pkgbuild is not installed")
+        raise FileNotFoundError("pkgbuild is not installed")
     if not shutil.which("productbuild"):
-        raise click.ClickException("productbuild is not installed")
+        raise FileNotFoundError("productbuild is not installed")
     if not shutil.which("productsign"):
-        raise click.ClickException("productsign is not installed")
+        raise FileNotFoundError("productsign is not installed")
     if not shutil.which("pkgutil"):
-        raise click.ClickException("pkgutil is not installed")
+        raise FileNotFoundError("pkgutil is not installed")
 
 
-def build_package(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
+def build_package(
+    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
+):
     """Build the macOS installer package."""
     pkg = f"{target_directory}/package/{app}.pkg"
     proc = subprocess.run(
@@ -381,11 +392,15 @@ def build_package(app: str, version: str, target_directory: pathlib.Path, verbos
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise RuntimeError(
+            f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Created {pkg}")
 
 
-def build_product(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
+def build_product(
+    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
+):
     """Build the macOS installer package."""
     product = f"{target_directory}/pkg/{app}-{version}.pkg"
     proc = subprocess.run(
@@ -403,7 +418,9 @@ def build_product(app: str, version: str, target_directory: pathlib.Path, verbos
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise RuntimeError(
+            f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Created {product}")
 
 
@@ -426,7 +443,9 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise RuntimeError(
+            f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Signed {product_path} to {signed_product_path}")
 
     proc = subprocess.run(
@@ -435,7 +454,9 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise click.ClickException(f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
+        raise RuntimeError(
+            f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
+        )
     verbose(f"Checked signature of {signed_product_path}")
 
 
