@@ -66,6 +66,29 @@ def build_installer(
         output: The path to the installer package; if not provided, the package will be created in the build directory.
         build_dir: The build directory; default is BUILD_DIR.
         verbose: An optional function to print verbose output.
+
+    Note: The welcome, conclusion, uninstall, post_install, and pre_install files
+    will be rendered as Jinja2 templates.
+    The welcome and conclusion files may be in Markdown or HTML format.
+    If in Markdown format, they will be converted to HTML.
+    The paths for install target, link target, build_dir, and output will
+    also be rendered as Jinja2 templates. For example:
+    output = "{{ app }}-{{ version }}.pkg"
+
+    The Jinja2 template variables available are:
+
+    - app: The name of the app.
+    - version: The version of the app.
+    - uninstall: The path to the uninstall shell script.
+    - url: A list of URLs to include in the installer package.
+    - install: A list of tuples of source and destination paths to install.
+    - banner: The path to the banner image.
+    - link: A list of tuples of source and target paths to create symlinks.
+    - post_install: The path to the post-install shell script.
+    - pre_install: The path to the pre-install shell script.
+    - build_dir: The build directory.
+    - output: The path to the installer package.
+
     """
     kwargs = validate_build_kwargs(**locals())
 
