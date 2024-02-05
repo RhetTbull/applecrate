@@ -49,7 +49,9 @@ Usage: applecrate build [OPTIONS]
 Options:
   -a, --app TEXT                  App name
   -v, --version TEXT              App version
-  -l, --license FILE              Path to license file
+  -l, --license FILE              Path to license file. If provided, the
+                                  installer will include a click-through license
+                                  agreement.
   -w, --welcome FILE              Path to welcome markdown or HTML file
   -c, --conclusion FILE           Path to conclusion markdown or HTML file
   -u, --uninstall FILE            Path to uninstall script; if not provided, an
@@ -85,7 +87,15 @@ Options:
                                   provided, a post-install script will be
                                   created for you.
   -s, --sign APPLE_DEVELOPER_CERTIFICATE_ID
-                                  Sign the installer package with a developer ID
+                                  Sign the installer package with a developer
+                                  ID. If APPLE_DEVELOPER_CERTIFICATE_ID starts
+                                  with '$', it will be treated as an environment
+                                  variable and the value of the environment
+                                  variable will be used as the developer ID.
+  -d, --build-dir DIRECTORY       Build directory to use for building the
+                                  installer package. Default is
+                                  build/applecrate/darwin if not provided.
+  -o, --output FILE               Path to save the installer package.
   --help                          Show this message and exit.
 
 ```
