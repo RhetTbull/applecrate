@@ -176,6 +176,19 @@ Destination paths, the welcome and conclusion HTML files, and the pre and post i
 - `build_dir`: The build directory.
 - `output`: The path to the installer package.
 
+For example, the default post-install script includes the following to create a symlink:
+
+```bash
+{% if link %}
+# Create links if needed
+{% for source, target in link %}
+ln -s "{{ source }}" "{{ target }}"
+{% endfor %}
+{% endif %}
+```
+
+The Jinja2 template engine will replace `{{ source }}` and `{{ target }}` with the source and target paths provided on the command line and remove the `if` and `for` blocks.
+
 See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0.x/templates/) for more information on how to use template variables.
 
 ## To Do
@@ -193,7 +206,7 @@ Heavily inspired by [macOS Installer Builder](https://github.com/KosalaHerath/ma
 
 ## License
 
-Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License. You may obtain a copy of the License [here](https://github.com/RhetTbull/applecrate/blob/main/LICENSE).
+Copyright Rhet Turnbull, 2024. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License. You may obtain a copy of the License [here](https://github.com/RhetTbull/applecrate/blob/main/LICENSE).
 
 ## Contributing
 
