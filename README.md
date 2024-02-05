@@ -34,14 +34,16 @@ from applecrate import build_installer
 
 if __name__ == "__main__":
     build_installer(
-        app="TestApp",
+        app="MyApp",
         version="1.0.0",
         license="LICENSE",
-        install=[(pathlib.Path("dist/testapp"), pathlib.Path("/usr/local/bin/testapp"))],
+        install=[(pathlib.Path("dist/myapp"), pathlib.Path("/usr/local/bin/myapp"))],
         output="build/{{ app }}-{{ version }}.pkg",
         verbose=print,
     )
 ```
+
+![Screenshot](https://github.com/RhetTbull/applecrate/blob/main/screenshot.png?raw=true)
 
 ## How It Works
 
