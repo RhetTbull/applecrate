@@ -23,6 +23,26 @@ applecrate build \
 
 This will create a native macOS installer for the tool `dist/mytool` which will install it to `/usr/local/bin/mytool-1.0.0`. The installer will create a symlink to the tool at `/usr/local/bin/mytool` and will also create an uninstaller to remove the tool.
 
+You can also use applecrate from your own Python code to create installers programmatically:
+
+```python
+"""Create a macOS installer package programmatically."""
+
+import pathlib
+
+from applecrate import build_installer
+
+if __name__ == "__main__":
+    build_installer(
+        app="TestApp",
+        version="1.0.0",
+        license="LICENSE",
+        install=[(pathlib.Path("dist/testapp"), pathlib.Path("/usr/local/bin/testapp"))],
+        output="build/{{ app }}-{{ version }}.pkg",
+        verbose=print,
+    )
+```
+
 ## How It Works
 
 AppleCrate is a Python application that uses the `pkgbuild` and `productbuild` command line tools to create a macOS installer package. AppleCrate does not do anything that you couldn't do yourself with these tools, but it automates the process and provide a simple command line interface. Creating a macOS installer package is a multi-step process that requires the generation of multiple files such as HTML files for the welcome screen, pre and post install scripts, Distribution XML file, etc. AppleCrate takes care of all of this for you but also allows you to customize the installer by providing your own files for these steps.
@@ -105,11 +125,10 @@ Options:
 
 - [X] Add support for signing the installer with a developer certificate
 - [ ] Add support for notarizing the installer
-- [ ] Add python API to create installers programmatically
-- [ ] Add `applecrate init` command to create a TOML configuration via a wizard
+- [X] Add python API to create installers programmatically
 - [ ] Add `applecrate check` command to check the configuration without building the installer
-- [ ] Documentation
-- [ ] Tests
+- [ ] Documentation (set up mkdocs)
+- [X] Tests
 
 ## Credits
 
@@ -118,3 +137,7 @@ Heavily inspired by [macOS Installer Builder](https://github.com/KosalaHerath/ma
 ## License
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use this project except in compliance with the License. You may obtain a copy of the License [here](https://github.com/RhetTbull/applecrate/blob/main/LICENSE).
+
+## Contributing
+
+Contributions of all kinds are welcome! Please see [CONTRIBUTING.md](https://github.com/RhetTbull/applecrate/blob/main/CONTRIBUTING.md) for more information.
