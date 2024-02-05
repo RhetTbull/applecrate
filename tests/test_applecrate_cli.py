@@ -6,6 +6,7 @@ import pytest
 from click.testing import CliRunner
 
 from applecrate.cli import cli
+from applecrate.pkg_utils import pkg_files
 
 
 def test_cli_config_precedence():
@@ -17,6 +18,7 @@ def test_cli_config_precedence():
                 """
                 output = "applecrate_output.pkg"
                 app = "applecrate"
+                install = [["applecrate.toml", "/usr/local/bin/applecrate.toml"],]
                 """
             )
         with open("pyproject.toml", "w") as f:
@@ -39,3 +41,5 @@ def test_cli_config_precedence():
         assert result.exit_code == 0
         assert "applecrate-2.0.0-cli_output.pkg" in result.output
         assert pathlib.Path("applecrate-2.0.0-cli_output.pkg").exists()
+        files = pkg_files("applecrate-2.0.0-cli_output.pkg")
+        assert "applecrate.pkg/usr/local/bin/applecrate.toml" in files

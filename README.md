@@ -121,6 +121,35 @@ Options:
 ```
 <!--[[[end]]] -->
 
+## Configuration
+
+The command line tool applecrate can be configured via `pyproject.toml` or `applecrate.toml` in the current working directory or via command line options. The command line arguments will always take precedence over the configuration files. If present, `applecrate.toml` will take precedence over `pyproject.toml`. The configuration file should be in the following format:
+
+`pyproject.toml`:
+
+```toml
+[tool.applecrate]
+app = "mytool"
+version = "1.0.0"
+license = "LICENSE"
+install = [
+    ["dist/mytool", "/usr/local/bin/{{ app }}-{{ version }}"],
+]
+```
+
+`applecrate.toml`:
+
+```toml
+app = "mytool"
+version = "1.0.0"
+license = "LICENSE"
+install = [
+    ["dist/mytool", "/usr/local/bin/{{ app }}-{{ version }}"],
+]
+```
+
+Any command line option is a valid key in the configuration file. For example, the `--app` option can be set in the configuration file as `app = "mytool"`. Command line options with a dash (`-`) should be converted to underscores (`_`) in the configuration file. For example, the `--pre-install` option should be set in the configuration file as `pre_install = "scripts/preinstall.sh"`.
+
 ## To Do
 
 - [X] Add support for signing the installer with a developer certificate
