@@ -107,7 +107,14 @@ Options:
                                   for you.
   -P, --post-install FILE         Path to post-install shell script; if not
                                   provided, a post-install script will be
-                                  created for you.
+                                  created for you. If provided, the installer
+                                  will run this script after other post-install
+                                  actions.
+  -m, --chmod MODE PATH           Change the mode of PATH to MODE after
+                                  installation. PATH must be an absolute path.
+                                  PATH may contain template variables {{ app }}
+                                  and {{ version }}. MODE must be an octal
+                                  number, for example '755'.
   -s, --sign APPLE_DEVELOPER_CERTIFICATE_ID
                                   Sign the installer package with a developer
                                   ID. If APPLE_DEVELOPER_CERTIFICATE_ID starts
