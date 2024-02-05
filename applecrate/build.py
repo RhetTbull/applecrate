@@ -42,11 +42,32 @@ def build_installer(
     post_install: pathlib.Path | None,
     pre_install: pathlib.Path | None,
     sign: str | None,
+    output: pathlib.Path | None = None,
+    build_dir: pathlib.Path | None = None,
     verbose: Callable[..., None] | None = None,
 ):
-    """Build a macOS installer package."""
-    kwargs = locals()
-    validate_build_kwargs(**kwargs)
+    """Build a macOS installer package.
+
+    Args:
+        app: The name of the app.
+        version: The version of the app.
+        welcome: The path to the welcome markdown or HTML file.
+        conclusion: The path to the conclusion markdown or HTML file.
+        uninstall: The path to the uninstall shell script.
+        no_uninstall: If True, do not include an uninstall script.
+        url: A list of URLs to include in the installer package.
+        install: A list of tuples of source and destination paths to install.
+        link: A list of tuples of source and target paths to create symlinks.
+        license: The path to the license file.
+        banner: The path to the banner image.
+        post_install: The path to the post-install shell script.
+        pre_install: The path to the pre-install shell script.
+        sign: The certificate ID to sign the installer package.
+        output: The path to the installer package; if not provided, the package will be created in the build directory.
+        build_dir: The build directory; default is BUILD_DIR.
+        verbose: An optional function to print verbose output.
+    """
+    kwargs = validate_build_kwargs(**locals())
 
     if not verbose:
 
@@ -70,6 +91,8 @@ def build_installer(
     post_install = kwargs["post_install"]
     pre_install = kwargs["pre_install"]
     sign = kwargs["sign"]
+    output = kwargs["output"]
+    build_dir = kwargs["build_dir"]
 
     # template data
     data: dict[str, Any] = {
@@ -82,20 +105,23 @@ def build_installer(
         "link": link,
         "post_install": post_install,
         "pre_install": pre_install,
+        "build_dir": build_dir,
+        "output": output,
     }
 
     verbose(f"Building installer package for {app} version {version}.")
 
-    verbose("Cleaning build directory")
-    clean_build_dir(BUILD_DIR)
+    build_dir = build_dir / "applecrate" / "darwin" if build_dir else BUILD_DIR
+    verbose(f"Cleaning build directory: {build_dir}")
+    clean_build_dir(build_dir)
     verbose("Creating build directories")
-    create_build_dirs(BUILD_DIR, verbose=verbose)
+    create_build_dirs(build_dir, verbose=verbose)
 
     # Render the welcome and conclusion templates
     verbose("Creating welcome.html")
     create_html_file(
         welcome,
-        BUILD_DIR / "Resources" / "welcome.html",
+        build_dir / "Resources" / "welcome.html",
         data,
         "welcome.md",
         verbose=verbose,
@@ -104,33 +130,23 @@ def build_installer(
     verbose("Creating conclusion.html")
     create_html_file(
         conclusion,
-        BUILD_DIR / "Resources" / "conclusion.html",
+        build_dir / "Resources" / "conclusion.html",
         data,
         "conclusion.md",
         verbose=verbose,
     )
 
     verbose("Copying license file")
-    copy_and_create_parents(
-        license, BUILD_DIR / "Resources" / "LICENSE.txt", verbose=verbose
-    )
+    copy_and_create_parents(license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose)
 
     verbose("Copying install files")
     for src, dst in install:
-        stage_install_files(src, dst, BUILD_DIR, verbose=verbose)
+        stage_install_files(src, dst, build_dir, verbose=verbose)
 
     # Render the uninstall script
     if not no_uninstall:
         verbose("Creating uninstall script")
-        target = (
-            BUILD_DIR
-            / "darwinpkg"
-            / "Library"
-            / "Application Support"
-            / app
-            / version
-            / "uninstall.sh"
-        )
+        target = build_dir / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
         if uninstall:
             render_template_from_file(uninstall, data, target)
         else:
@@ -141,44 +157,44 @@ def build_installer(
 
     verbose("Creating pre- and post-install scripts")
 
-    target = BUILD_DIR / "scripts" / "preinstall"
+    target = build_dir / "scripts" / "preinstall"
     template = get_template("preinstall")
     render_template(template, data, target)
     pathlib.Path(target).chmod(0o755)
     verbose(f"Created {target}")
 
-    target = BUILD_DIR / "scripts" / "postinstall"
+    target = build_dir / "scripts" / "postinstall"
     template = get_template("postinstall")
     render_template(template, data, target)
     pathlib.Path(target).chmod(0o755)
     verbose(f"Created {target}")
 
-    target = BUILD_DIR / "scripts" / "links"
+    target = build_dir / "scripts" / "links"
     template = get_template("links")
     render_template(template, data, target)
     pathlib.Path(target).chmod(0o755)
     verbose(f"Created {target}")
 
     if pre_install:
-        target = BUILD_DIR / "scripts" / "custom_preinstall"
+        target = build_dir / "scripts" / "custom_preinstall"
         render_template_from_file(pre_install, data, target)
         pathlib.Path(target).chmod(0o755)
         verbose(f"Created {target}")
 
     if post_install:
-        target = BUILD_DIR / "scripts" / "custom_postinstall"
+        target = build_dir / "scripts" / "custom_postinstall"
         render_template_from_file(post_install, data, target)
         pathlib.Path(target).chmod(0o755)
         verbose(f"Created {target}")
 
     if banner:
         verbose("Copying banner image")
-        target = BUILD_DIR / "Resources" / "banner.png"
+        target = build_dir / "Resources" / "banner.png"
         copy_and_create_parents(banner, target, verbose=verbose)
         verbose(f"Created {target}")
 
     verbose("Creating distribution file")
-    target = BUILD_DIR / "Distribution"
+    target = build_dir / "Distribution"
     template = get_template("Distribution")
     render_template(template, data, target)
     pathlib.Path(target).chmod(0o755)
@@ -186,26 +202,27 @@ def build_installer(
 
     # Build the macOS installer package
     verbose("Building the macOS installer package")
-    build_package(app, version, BUILD_DIR, verbose=verbose)
+    build_package(app, version, build_dir, verbose=verbose)
 
     # Build the macOS installer product
     verbose("Building the macOS installer product")
-    build_product(app, version, BUILD_DIR, verbose=verbose)
+    build_product(app, version, build_dir, verbose=verbose)
     product = f"{app}-{version}.pkg"
-    product_path = BUILD_DIR / "pkg" / product
+    product_path = build_dir / "pkg" / product
 
     # sign the installer package
     if sign:
-        signed_product_path = BUILD_DIR / "pkg-signed" / f"{app}-{version}.pkg"
+        signed_product_path = build_dir / "pkg-signed" / f"{app}-{version}.pkg"
         signed_product_path.parent.mkdir(parents=True, exist_ok=True)
         verbose(f"Signing the installer package with certificate ID: {sign}")
         sign_product(product_path, signed_product_path, sign, verbose=verbose)
 
-    verbose("Copying installer package to build directory")
     product_path = product_path if not sign else signed_product_path
-    shutil.copy(product_path, BUILD_ROOT / product)
+    target_path = output or BUILD_ROOT / product
+    verbose(f"Copying installer package to target: {target_path}")
+    shutil.copy(product_path, target_path)
 
-    verbose(f"Created {BUILD_ROOT / product}")
+    verbose(f"Created {target_path}")
     verbose("Done!")
 
 
@@ -231,10 +248,19 @@ def render_build_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
             target = pathlib.Path(target_template.render(app=app, version=version))
             new_link.append((src, target))
         rendered["link"] = new_link
+
+    if build_dir := rendered.get("build_dir"):
+        template = Template(str(build_dir))
+        rendered["build_dir"] = pathlib.Path(template.render(app=app, version=version))
+
+    if output := rendered.get("output"):
+        template = Template(str(output))
+        rendered["output"] = pathlib.Path(template.render(app=app, version=version))
+
     return rendered
 
 
-def validate_build_kwargs(**kwargs):
+def validate_build_kwargs(**kwargs) -> dict[str, Any]:
     """Validate the build command arguments."""
 
     # version and app must be provided
@@ -311,6 +337,14 @@ def validate_build_kwargs(**kwargs):
             raise ValueError(f"Invalid certificate ID: {sign}")
         kwargs["sign"] = sign
 
+    if build_dir := kwargs.get("build_dir"):
+        kwargs["build_dir"] = pathlib.Path(build_dir)
+
+    if output := kwargs.get("output"):
+        kwargs["output"] = pathlib.Path(output)
+
+    return kwargs
+
 
 def clean_build_dir(build_dir: pathlib.Path):
     """Clean the build directory."""
@@ -370,9 +404,7 @@ def check_dependencies(verbose: Callable[..., None]):
         raise FileNotFoundError("pkgutil is not installed")
 
 
-def build_package(
-    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
-):
+def build_package(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
     """Build the macOS installer package."""
     pkg = f"{target_directory}/package/{app}.pkg"
     proc = subprocess.run(
@@ -392,15 +424,11 @@ def build_package(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Created {pkg}")
 
 
-def build_product(
-    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
-):
+def build_product(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
     """Build the macOS installer package."""
     product = f"{target_directory}/pkg/{app}-{version}.pkg"
     proc = subprocess.run(
@@ -418,9 +446,7 @@ def build_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Created {product}")
 
 
@@ -443,9 +469,7 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Signed {product_path} to {signed_product_path}")
 
     proc = subprocess.run(
@@ -454,9 +478,7 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Checked signature of {signed_product_path}")
 
 

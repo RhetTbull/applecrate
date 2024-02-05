@@ -9,10 +9,8 @@ import click
 import toml
 from click import echo
 
-from .build import build_installer, check_dependencies, validate_build_kwargs
-from .utils import (
-    set_from_defaults,
-)
+from .build import BUILD_DIR, build_installer, check_dependencies, validate_build_kwargs
+from .utils import set_from_defaults
 
 
 @click.group()
@@ -126,6 +124,18 @@ def cli():
     "If APPLE_DEVELOPER_CERTIFICATE_ID starts with '$', "
     "it will be treated as an environment variable "
     "and the value of the environment variable will be used as the developer ID.",
+)
+@click.option(
+    "--build-dir",
+    "-d",
+    type=click.Path(file_okay=False, writable=True, exists=True),
+    help="Build directory to use for building the installer package. " f"Default is {BUILD_DIR} if not provided.",
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.Path(dir_okay=False),
+    help="Path to save the installer package.",
 )
 def build(**kwargs):
     """applecrate: A Python package for creating macOS installer packages."""
