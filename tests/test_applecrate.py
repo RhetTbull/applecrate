@@ -17,6 +17,7 @@ def test_build_installer_basic(tmp_path, capsys):
     build_installer(
         app="TestApp",
         version="1.0.0",
+        verbose=print,
     )
     assert (tmp_path / "build" / "TestApp-1.0.0.pkg").exists()
     captured = capsys.readouterr()
@@ -42,6 +43,7 @@ def test_build_installer_build_dir(tmp_path, capsys):
         version="1.0.0",
         build_dir=tmp_path / "build_test",
         output=tmp_path / "test.pkg",
+        verbose=print,
     )
     assert (tmp_path / "test.pkg").exists()
     captured = capsys.readouterr()
@@ -100,3 +102,19 @@ def test_build_installer_no_uninstaller(tmp_path):
     assert (tmp_path / "test.pkg").exists()
     package_files = pkg_files(tmp_path / "test.pkg")
     assert "TestApp.pkg/Library/Application Support/TestApp/1.0.0/uninstall.sh" not in package_files
+
+
+def test_build_installer_url(tmp_path):
+    """Test build_installer with url."""
+    os.chdir(tmp_path)
+    build_installer(
+        app="TestApp",
+        version="1.0.0",
+        url=[("TestApp", "https://example.com/testapp")],
+        output=tmp_path / "test.pkg",
+    )
+    assert (tmp_path / "test.pkg").exists()
+    contents = tmp_path / "contents"
+    contents.mkdir()
+    extract_pkg(tmp_path / "test.pkg", contents)
+    assert "https://example.com/testapp" in (tmp_path / "contents" / "Resources" / "conclusion.html").read_text()

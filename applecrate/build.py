@@ -379,7 +379,7 @@ def clean_build_dir(build_dir: pathlib.Path):
 def create_build_dirs(build_dir: pathlib.Path, verbose: Callable[..., None]):
     """Create build directory."""
 
-    print(f"Creating build directory {build_dir}")
+    verbose(f"Creating build directory {build_dir}")
     # files will be created in the build directory
     build_dir.mkdir(exist_ok=True, parents=True, mode=0o755)
 
