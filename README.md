@@ -144,6 +144,7 @@ license = "LICENSE"
 install = [
     ["dist/mytool", "/usr/local/bin/{{ app }}-{{ version }}"],
 ]
+sign = "$APPLE_DEVELOPER_CERTIFICATE_ID"
 ```
 
 `applecrate.toml`:
@@ -155,9 +156,12 @@ license = "LICENSE"
 install = [
     ["dist/mytool", "/usr/local/bin/{{ app }}-{{ version }}"],
 ]
+sign = "$APPLE_DEVELOPER_CERTIFICATE_ID"
 ```
 
 Any command line option is a valid key in the configuration file. For example, the `--app` option can be set in the configuration file as `app = "mytool"`. Command line options with a dash (`-`) should be converted to underscores (`_`) in the configuration file. For example, the `--pre-install` option should be set in the configuration file as `pre_install = "scripts/preinstall.sh"`.
+
+If the value of `sign` begins with a `$`, as in the example above, it will be treated as an environment variable and the value of the environment variable will be used as the certificate ID.
 
 ## Template Variables
 
