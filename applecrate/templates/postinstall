@@ -2,10 +2,17 @@
 
 # Perform post installation tasks here
 
-# Create links if needed
 {% if link %}
+# Create links if needed
 {% for source, target in link %}
 ln -s "{{ source }}" "{{ target }}"
+{% endfor %}
+{% endif %}
+
+{% if chmod %}
+# Run chmod if needed
+{% for mode, file in chmod %}
+chmod {{ mode }} "{{ file }}"
 {% endfor %}
 {% endif %}
 

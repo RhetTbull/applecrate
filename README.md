@@ -152,6 +152,25 @@ install = [
 
 Any command line option is a valid key in the configuration file. For example, the `--app` option can be set in the configuration file as `app = "mytool"`. Command line options with a dash (`-`) should be converted to underscores (`_`) in the configuration file. For example, the `--pre-install` option should be set in the configuration file as `pre_install = "scripts/preinstall.sh"`.
 
+## Template Variables
+
+Destination paths, the welcome and conclusion HTML files, and the pre and post install scripts can include template variables. The following template variables are available:
+
+- `app`: The name of the app.
+- `version`: The version of the app.
+- `uninstall`: The path to the uninstall shell script.
+- `url`: A list of URLs to include in the installer package.
+- `install`: A list of tuples of source and destination paths to install.
+- `banner`: The path to the banner image.
+- `link`: A list of tuples of source and target paths to create symlinks post-installation.
+- `post_install`: The path to the post-install shell script.
+- `pre_install`: The path to the pre-install shell script.
+- `chmod`: A list of tuples of mode and path to change the mode of files post-installation.
+- `build_dir`: The build directory.
+- `output`: The path to the installer package.
+
+See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0.x/templates/) for more information on how to use template variables.
+
 ## To Do
 
 - [X] Add support for signing the installer with a developer certificate

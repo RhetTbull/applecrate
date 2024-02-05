@@ -18,10 +18,7 @@ from .template_utils import (
     render_template,
     render_template_from_file,
 )
-from .utils import (
-    check_certificate_is_valid,
-    copy_and_create_parents,
-)
+from .utils import check_certificate_is_valid, copy_and_create_parents
 
 BUILD_DIR = pathlib.Path("build/applecrate/darwin")
 BUILD_ROOT = pathlib.Path("build")
@@ -41,6 +38,7 @@ def build_installer(
     banner: pathlib.Path | None = None,
     post_install: pathlib.Path | None = None,
     pre_install: pathlib.Path | None = None,
+    chmod: (Iterable[tuple[str | int, pathlib.Path] | list[str | int | pathlib.Path]] | None) = None,
     sign: str | None = None,
     output: pathlib.Path | None = None,
     build_dir: pathlib.Path | None = None,
@@ -60,9 +58,10 @@ def build_installer(
         link: A list of tuples of source and target paths to create symlinks.
         license: The path to the license file. If provided, it will be copied to the installer package and user will be prompted to accept it.
         banner: The path to the banner image.
-        post_install: The path to the post-install shell script.
+        post_install: The path to the post-install shell script. If provided, will be run after other post-install actions such as links and chmod.
         pre_install: The path to the pre-install shell script.
         sign: The certificate ID to sign the installer package.
+        chmod: A list of tuples of mode and path to change the mode of files in the installer package.
         output: The path to the installer package; if not provided, the package will be created in the build directory.
         build_dir: The build directory; default is BUILD_DIR.
         verbose: An optional function to print verbose output.
@@ -86,6 +85,7 @@ def build_installer(
     - link: A list of tuples of source and target paths to create symlinks.
     - post_install: The path to the post-install shell script.
     - pre_install: The path to the pre-install shell script.
+    - chmod: A list of tuples of mode and path to change the mode of files post-installation.
     - build_dir: The build directory.
     - output: The path to the installer package.
 
@@ -116,6 +116,7 @@ def build_installer(
     sign = kwargs["sign"]
     output = kwargs["output"]
     build_dir = kwargs["build_dir"]
+    chmod = kwargs["chmod"]
 
     # template data
     data: dict[str, Any] = {
@@ -128,6 +129,7 @@ def build_installer(
         "link": link,
         "post_install": post_install,
         "pre_install": pre_install,
+        "chmod": chmod,
         "build_dir": build_dir,
         "output": output,
     }
@@ -239,6 +241,7 @@ def build_installer(
     product_path = product_path if not sign else signed_product_path
     target_path = output or BUILD_ROOT / product
     verbose(f"Copying installer package to target: {target_path}")
+    target_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(product_path, target_path)
 
     verbose(f"Created {target_path}")
@@ -360,6 +363,21 @@ def validate_build_kwargs(**kwargs) -> dict[str, Any]:
 
     if output := kwargs.get("output"):
         kwargs["output"] = pathlib.Path(output)
+
+    if chmod := kwargs.get("chmod"):
+        new_chmod = []
+        for mode, path in chmod:
+            path = pathlib.Path(path)
+            mode = str(mode)  # mode may be an int or a str representing an octal number
+            if not path.is_absolute():
+                raise ValueError(f"Chmod path {path} must be an absolute path")
+            if not mode.isdigit():
+                raise ValueError(f"Chmod mode {mode} must be an octal number")
+            # mode must be 3 or 4 octal digits
+            if len(mode) not in [3, 4]:
+                raise ValueError(f"Chmod mode {mode} must be 3 or 4 octal digits")
+            new_chmod.append((mode, path))
+        kwargs["chmod"] = new_chmod
 
     return kwargs
 

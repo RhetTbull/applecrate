@@ -38,7 +38,8 @@ def cli():
     "--license",
     "-l",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to license file. " "If provided, the installer will include a click-through license agreement.",
+    help="Path to license file. "
+    "If provided, the installer will include a click-through license agreement.",
 )
 @click.option(
     "--welcome",
@@ -114,7 +115,20 @@ def cli():
     "--post-install",
     "-P",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to post-install shell script; " "if not provided, a post-install script will be created for you.",
+    help="Path to post-install shell script; "
+    "if not provided, a post-install script will be created for you. "
+    "If provided, the installer will run this script after other post-install actions.",
+)
+@click.option(
+    "--chmod",
+    "-m",
+    metavar="MODE PATH",
+    nargs=2,
+    multiple=True,
+    help="Change the mode of PATH to MODE after installation. "
+    "PATH must be an absolute path. "
+    "PATH may contain template variables {{ app }} and {{ version }}. "
+    "MODE must be an octal number, for example '755'. ",
 )
 @click.option(
     "--sign",

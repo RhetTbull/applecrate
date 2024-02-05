@@ -76,10 +76,7 @@ def test_build_installer_files_basic(tmp_path):
     assert "TestApp.pkg/postinstall" in package_files
     assert "TestApp.pkg/custom_preinstall" in package_files
     assert "TestApp.pkg/custom_postinstall" in package_files
-    assert (
-        "TestApp.pkg/Library/Application Support/TestApp/1.0.0/uninstall.sh"
-        in package_files
-    )
+    assert "TestApp.pkg/Library/Application Support/TestApp/1.0.0/uninstall.sh" in package_files
     assert "Resources/welcome.html" in package_files
     assert "Resources/conclusion.html" in package_files
     assert "Resources/LICENSE.txt" in package_files
@@ -88,12 +85,8 @@ def test_build_installer_files_basic(tmp_path):
     contents = tmp_path / "contents"
     contents.mkdir()
     extract_pkg(tmp_path / "test.pkg", contents)
-    assert (
-        contents / "TestApp.pkg" / "custom_preinstall"
-    ).read_text() == "#!/bin/bash\necho 'Preinstalling...'"
-    assert (
-        contents / "TestApp.pkg" / "custom_postinstall"
-    ).read_text() == "#!/bin/bash\necho 'Postinstalling...'"
+    assert (contents / "TestApp.pkg" / "custom_preinstall").read_text() == "#!/bin/bash\necho 'Preinstalling...'"
+    assert (contents / "TestApp.pkg" / "custom_postinstall").read_text() == "#!/bin/bash\necho 'Postinstalling...'"
     assert (contents / "Resources/LICENSE.txt").read_text() == "MIT License"
 
 
@@ -108,10 +101,7 @@ def test_build_installer_no_uninstaller(tmp_path):
     )
     assert (tmp_path / "test.pkg").exists()
     package_files = pkg_files(tmp_path / "test.pkg")
-    assert (
-        "TestApp.pkg/Library/Application Support/TestApp/1.0.0/uninstall.sh"
-        not in package_files
-    )
+    assert "TestApp.pkg/Library/Application Support/TestApp/1.0.0/uninstall.sh" not in package_files
 
 
 def test_build_installer_url(tmp_path):
@@ -127,7 +117,27 @@ def test_build_installer_url(tmp_path):
     contents = tmp_path / "contents"
     contents.mkdir()
     extract_pkg(tmp_path / "test.pkg", contents)
-    assert (
-        "https://example.com/testapp"
-        in (tmp_path / "contents" / "Resources" / "conclusion.html").read_text()
+    assert "https://example.com/testapp" in (tmp_path / "contents" / "Resources" / "conclusion.html").read_text()
+
+
+def test_build_installer_chmod(tmp_path):
+    """Test build_installer with chmod."""
+    os.chdir(tmp_path)
+    write_files(
+        {
+            "install.sh": "#!/bin/bash\necho 'Installing...'",
+        }
     )
+    build_installer(
+        app="TestApp",
+        version="1.0.0",
+        install=[("install.sh", "/usr/local/bin/test")],
+        chmod=[(755, "/usr/local/bin/test")],
+        output=tmp_path / "test.pkg",
+    )
+    assert (tmp_path / "test.pkg").exists()
+    contents = tmp_path / "contents"
+    contents.mkdir()
+    extract_pkg(tmp_path / "test.pkg", contents)
+    postinstall = (contents / "TestApp.pkg" / "postinstall").read_text()
+    assert 'chmod 755 "/usr/local/bin/test"' in postinstall
