@@ -192,12 +192,6 @@ def build_installer(
     pathlib.Path(target).chmod(0o755)
     verbose(f"Created {target}")
 
-    target = build_dir / "scripts" / "links"
-    template = get_template("links")
-    render_template(template, data, target)
-    pathlib.Path(target).chmod(0o755)
-    verbose(f"Created {target}")
-
     if pre_install:
         target = build_dir / "scripts" / "custom_preinstall"
         render_template_from_file(pre_install, data, target)
