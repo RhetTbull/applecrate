@@ -38,7 +38,7 @@ def cli():
     "--license",
     "-l",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to license file",
+    help="Path to license file. " "If provided, the installer will include a click-through license agreement.",
 )
 @click.option(
     "--welcome",

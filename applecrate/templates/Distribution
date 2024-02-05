@@ -7,7 +7,9 @@
     { % endif % }
     <welcome file="welcome.html" mime-type="text/html" />
     <conclusion file="conclusion.html" mime-type="text/html" />
+    { % if license %}
     <license file="LICENSE.txt"/>
+    { % endif %}
     <options customize="never" allow-external-scripts="no"/>
     <domains enable_localSystem="true" />
     <installation-check script="installCheck();"/>

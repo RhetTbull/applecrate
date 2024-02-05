@@ -24,6 +24,12 @@ dev = [
     "types-toml",
 ]
 lint = ["ruff>=0.1.14"]
+test = ["pytest>=7.4.2", "pytest-cov", "mypy>=1.8.0"]
+docs = [
+    "mkdocs>=1.4.2",
+    "mkdocs-material>=9.0.13",
+    "mkdocstrings-python>=0.8.3",
+]
 
 [project.urls]
 Home = "https://github.com/RhetTbull/applecrate"

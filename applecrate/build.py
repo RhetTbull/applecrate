@@ -37,7 +37,7 @@ def build_installer(
     url: Iterable[tuple[str, str] | list[str]],
     install: Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]],
     link: Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]],
-    license: pathlib.Path,
+    license: pathlib.Path | None,
     banner: pathlib.Path | None,
     post_install: pathlib.Path | None,
     pre_install: pathlib.Path | None,
@@ -58,7 +58,7 @@ def build_installer(
         url: A list of URLs to include in the installer package.
         install: A list of tuples of source and destination paths to install.
         link: A list of tuples of source and target paths to create symlinks.
-        license: The path to the license file.
+        license: The path to the license file. If provided, it will be copied to the installer package and user will be prompted to accept it.
         banner: The path to the banner image.
         post_install: The path to the post-install shell script.
         pre_install: The path to the pre-install shell script.
@@ -159,8 +159,9 @@ def build_installer(
         verbose=verbose,
     )
 
-    verbose("Copying license file")
-    copy_and_create_parents(license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose)
+    if license:
+        verbose("Copying license file")
+        copy_and_create_parents(license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose)
 
     verbose("Copying install files")
     for src, dst in install:
@@ -287,9 +288,8 @@ def validate_build_kwargs(**kwargs) -> dict[str, Any]:
     if not kwargs.get("version"):
         raise ValueError("Version must be provided")
 
-    if not kwargs.get("license"):
-        raise ValueError("License file must be provided")
-    kwargs["license"] = pathlib.Path(kwargs["license"])
+    if kwargs.get("license"):
+        kwargs["license"] = pathlib.Path(kwargs["license"])
 
     if kwargs.get("no_uninstall") and kwargs.get("uninstall"):
         raise ValueError("Cannot specify both --uninstall and --no-uninstall")
