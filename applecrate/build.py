@@ -30,18 +30,18 @@ BUILD_ROOT = pathlib.Path("build")
 def build_installer(
     app: str,
     version: str,
-    welcome: pathlib.Path | None,
-    conclusion: pathlib.Path | None,
-    uninstall: pathlib.Path | None,
-    no_uninstall: bool,
-    url: Iterable[tuple[str, str] | list[str]],
-    install: Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]],
-    link: Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]],
-    license: pathlib.Path | None,
-    banner: pathlib.Path | None,
-    post_install: pathlib.Path | None,
-    pre_install: pathlib.Path | None,
-    sign: str | None,
+    welcome: pathlib.Path | None = None,
+    conclusion: pathlib.Path | None = None,
+    uninstall: pathlib.Path | None = None,
+    no_uninstall: bool = False,
+    url: Iterable[tuple[str, str] | list[str]] | None = None,
+    install: (Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]] | None) = None,
+    link: (Iterable[tuple[pathlib.Path, pathlib.Path] | list[pathlib.Path]] | None) = None,
+    license: pathlib.Path | None = None,
+    banner: pathlib.Path | None = None,
+    post_install: pathlib.Path | None = None,
+    pre_install: pathlib.Path | None = None,
+    sign: str | None = None,
     output: pathlib.Path | None = None,
     build_dir: pathlib.Path | None = None,
     verbose: Callable[..., None] | None = None,
@@ -163,9 +163,10 @@ def build_installer(
         verbose("Copying license file")
         copy_and_create_parents(license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose)
 
-    verbose("Copying install files")
-    for src, dst in install:
-        stage_install_files(src, dst, build_dir, verbose=verbose)
+    if install:
+        verbose("Copying install files")
+        for src, dst in install:
+            stage_install_files(src, dst, build_dir, verbose=verbose)
 
     # Render the uninstall script
     if not no_uninstall:

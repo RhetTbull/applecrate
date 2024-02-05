@@ -24,6 +24,10 @@ Linting and formatting utilizes [ruff](https://github.com/astral-sh/ruff)
 
 - `mypy applecrate`
 
+## Testing
+
+- `pytest -vv`
+
 ## Building
 
 - `rm -rf dist && rm -rf build`
