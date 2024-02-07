@@ -215,3 +215,7 @@ Copyright Rhet Turnbull, 2024. Licensed under the Apache License, Version 2.0 (t
 ## Contributing
 
 Contributions of all kinds are welcome! Please see [CONTRIBUTING.md](https://github.com/RhetTbull/applecrate/blob/main/CONTRIBUTING.md) for more information.
+
+## See Also
+
+[macOS-Pkg-Builder](https://github.com/ripeda/macOS-Pkg-Builder), another Python package for creating macOS installer packages. macOS-Pkg-Builder provides a programmatic interface for creating installer packages and is more flexible than AppleCrate. AppleCrate is designed to be simpler and easier to use for common use cases. I wasn't aware of macOS-Pkg-Builder when I started AppleCrate, but I might have used it to implement AppleCrate had I known about it.
