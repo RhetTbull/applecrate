@@ -56,6 +56,21 @@ def render_template_from_file(filepath: pathlib.Path, data: dict[str, Any], outp
         file.write(rendered)
 
 
+def render_path(path: pathlib.Path | None, data: dict[str, Any]) -> pathlib.Path:
+    """Render a path template."""
+    template = Template(str(path))
+    return pathlib.Path(template.render(**data))
+
+
+def render_path_list_of_tuple(
+    paths: list[tuple[pathlib.Path, pathlib.Path]] | None, data: dict[str, Any]
+) -> list[tuple[pathlib.Path, pathlib.Path]]:
+    """Render a list of path tuples."""
+    if not paths:
+        return []
+    return [(render_path(p[0], data), render_path(p[1], data)) for p in paths]
+
+
 def create_html_file(
     input_path: pathlib.Path | None,
     output_path: pathlib.Path,

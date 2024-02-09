@@ -1,6 +1,7 @@
 """Test applecrate basic functionality."""
 
 import os
+import pathlib
 
 import pytest
 
@@ -38,6 +39,7 @@ def test_build_installer_output(tmp_path):
 def test_build_installer_build_dir(tmp_path, capsys):
     """Test the build_installer function with build_dir."""
     os.chdir(tmp_path)
+    pathlib.Path("build_test").mkdir()
     build_installer(
         app="TestApp",
         version="1.0.0",
@@ -48,6 +50,19 @@ def test_build_installer_build_dir(tmp_path, capsys):
     assert (tmp_path / "test.pkg").exists()
     captured = capsys.readouterr()
     assert str(tmp_path / "build_test" / "applecrate") in captured.out
+
+
+def test_build_installer_build_dir_not_exists(tmp_path):
+    """Test the build_installer function with build_dir that doesn't exist."""
+    os.chdir(tmp_path)
+    with pytest.raises(FileNotFoundError):
+        build_installer(
+            app="TestApp",
+            version="1.0.0",
+            build_dir=tmp_path / "build_test",
+            output=tmp_path / "test.pkg",
+            verbose=print,
+        )
 
 
 def test_build_installer_files_basic(tmp_path):
