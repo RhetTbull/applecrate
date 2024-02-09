@@ -28,8 +28,6 @@ You can also use applecrate from your own Python code to create installers progr
 ```python
 """Create a macOS installer package programmatically."""
 
-import pathlib
-
 from applecrate import build_installer
 
 if __name__ == "__main__":
@@ -37,7 +35,7 @@ if __name__ == "__main__":
         app="MyApp",
         version="1.0.0",
         license="LICENSE",
-        install=[(pathlib.Path("dist/myapp"), pathlib.Path("/usr/local/bin/myapp"))],
+        install=[("dist/myapp", "/usr/local/bin/myapp")],
         output="build/{{ app }}-{{ version }}.pkg",
         verbose=print,
     )
