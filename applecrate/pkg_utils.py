@@ -1,8 +1,10 @@
 """Utils for working with installer package files."""
 
 import os
+import pathlib
 import subprocess
 import tempfile
+import xml.etree.ElementTree as ET
 
 
 def pkg_payload_files(pkg: str | os.PathLike) -> list[str]:
@@ -69,3 +71,21 @@ def extract_pkg(pkg: str | os.PathLike, dest: str | os.PathLike) -> None:
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
+
+
+def pkg_info(pkg: str | os.PathLike) -> dict[str, str]:
+    """Get the package info as a dict."""
+    pkg = pathlib.Path(pkg)
+    with tempfile.TemporaryDirectory() as tempdir:
+        extract_pkg(pkg, tempdir)
+        # the PackageInfo is in the a folder that ends in .pkg but won't necessarily be the same name as the package
+        pkg_names = list(pathlib.Path(tempdir).glob("*.pkg"))
+        if not pkg_names:
+            raise FileNotFoundError("No .pkg folder found in the expanded package.")
+        pkg_name = pkg_names[0]
+        packageinfo = pkg_name / "PackageInfo"
+        if not packageinfo.exists():
+            raise FileNotFoundError("No PackageInfo file found in the expanded package.")
+        tree = ET.parse(str(packageinfo))
+        root = tree.getroot()
+        return root.attrib.copy()

@@ -20,20 +20,22 @@ def cli():
 
 
 # @cli.command()
-# def init():
-#     """Create a new applecrate project."""
-#     echo("Creating a new applecrate project.")
-
-
-# @cli.command()
 # def check():
 #     """Check the current environment for applecrate."""
 #     echo("Checking the current environment for applecrate.")
 
 
 @cli.command()
-@click.option("--app", "-a", help="App name")
-@click.option("--version", "-v", help="App version")
+@click.option("--app", "-a", help="App name.")
+@click.option("--version", "-v", help="App version.")
+@click.option(
+    "--identifier",
+    "-I",
+    help="Unique package identifier. "
+    "The OS X Installer recognizes a package as being an upgrade to an already-installed package only "
+    "if the package identifiers match, so it is advisable to set a meaningful, consistent identifier when you build the package. "
+    "If not set, the identifier will be set to 'org.opensource.{{ app }}'.",
+)
 @click.option(
     "--license",
     "-l",

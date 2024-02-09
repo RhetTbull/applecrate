@@ -67,8 +67,15 @@ Usage: applecrate build [OPTIONS]
   applecrate: A Python package for creating macOS installer packages.
 
 Options:
-  -a, --app TEXT                  App name
-  -v, --version TEXT              App version
+  -a, --app TEXT                  App name.
+  -v, --version TEXT              App version.
+  -I, --identifier TEXT           Unique package identifier. The OS X Installer
+                                  recognizes a package as being an upgrade to an
+                                  already-installed package only if the package
+                                  identifiers match, so it is advisable to set a
+                                  meaningful, consistent identifier when you
+                                  build the package. If not set, the identifier
+                                  will be set to 'org.opensource.{{ app }}'.
   -l, --license FILE              Path to license file. If provided, the
                                   installer will include a click-through license
                                   agreement.
@@ -163,10 +170,11 @@ If the value of `sign` begins with a `$`, as in the example above, it will be tr
 
 ## Template Variables
 
-Destination paths, the welcome and conclusion HTML files, and the pre and post install scripts can include template variables. The following template variables are available:
+Destination paths, the package identifier, the welcome and conclusion HTML files, and the pre and post install scripts can include template variables. The following template variables are available:
 
 - `app`: The name of the app.
 - `version`: The version of the app.
+- `identifier`: The package identifier.
 - `uninstall`: The path to the uninstall shell script.
 - `url`: A list of URLs to include in the installer package.
 - `install`: A list of tuples of source and destination paths to install.
@@ -177,6 +185,7 @@ Destination paths, the welcome and conclusion HTML files, and the pre and post i
 - `chmod`: A list of tuples of mode and path to change the mode of files post-installation.
 - `build_dir`: The build directory.
 - `output`: The path to the installer package.
+- `machine`: The machine architecture, for example `x86_64` or `arm64`.
 
 For example, the default post-install script includes the following to create a symlink:
 
@@ -192,6 +201,8 @@ ln -s "{{ source }}" "{{ target }}"
 The Jinja2 template engine will replace `{{ source }}` and `{{ target }}` with the source and target paths provided on the command line and remove the `if` and `for` blocks.
 
 See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0.x/templates/) for more information on how to use template variables.
+
+The package identifier, the build path, and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables.
 
 ## To Do
 

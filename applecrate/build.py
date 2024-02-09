@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import pathlib
+import platform
 import shutil
 import subprocess
 from collections.abc import Iterable
@@ -14,6 +15,7 @@ from .template_utils import (
     get_template,
     render_path,
     render_path_list_of_tuple,
+    render_str,
     render_template,
     render_template_from_file,
 )
@@ -30,29 +32,19 @@ def no_op(*args, **kwargs):
 def build_installer(
     app: str,
     version: str,
+    identifier: str | None = None,
     welcome: str | os.PathLike | None = None,
     conclusion: str | os.PathLike | None = None,
     uninstall: str | os.PathLike | None = None,
     no_uninstall: bool = False,
     url: Iterable[tuple[str, str] | list[str]] | None = None,
-    install: (
-        Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]]
-        | None
-    ) = None,
-    link: (
-        Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]]
-        | None
-    ) = None,
+    install: (Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]] | None) = None,
+    link: (Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]] | None) = None,
     license: str | os.PathLike | None = None,
     banner: str | os.PathLike | None = None,
     post_install: str | os.PathLike | None = None,
     pre_install: str | os.PathLike | None = None,
-    chmod: (
-        Iterable[
-            tuple[str | int, str | os.PathLike] | list[str | int | str | os.PathLike]
-        ]
-        | None
-    ) = None,
+    chmod: (Iterable[tuple[str | int, str | os.PathLike] | list[str | int | str | os.PathLike]] | None) = None,
     sign: str | None = None,
     output: str | os.PathLike | None = None,
     build_dir: str | os.PathLike | None = None,
@@ -63,6 +55,7 @@ def build_installer(
     Args:
         app: The name of the app.
         version: The version of the app.
+        identifier: The package identifier. If not provided, it will be generated from the app name.
         welcome: The path to the welcome markdown or HTML file.
         conclusion: The path to the conclusion markdown or HTML file.
         uninstall: The path to the uninstall shell script.
@@ -92,6 +85,7 @@ def build_installer(
 
     - app: The name of the app.
     - version: The version of the app.
+    - identifier: The package identifier.
     - uninstall: The path to the uninstall shell script.
     - url: A list of URLs to include in the installer package.
     - install: A list of tuples of source and destination paths to install.
@@ -102,16 +96,16 @@ def build_installer(
     - chmod: A list of tuples of mode and path to change the mode of files post-installation.
     - build_dir: The build directory.
     - output: The path to the installer package.
+    - machine: the platform.machine() value, e.g. 'x86_64' or 'arm64'
 
     """
 
     # validate arguments and perform necessary conversions (e.g. str to pathlib.Path)
     app = validate_app(app)
     version = validate_version(version)
+    identifier = identifier or "org.opensource.{{ app }}"
     welcome = validate_optional_path_extension(welcome, "welcome", [".md", ".html"])
-    conclusion = validate_optional_path_extension(
-        conclusion, "conclusion", [".md", ".html"]
-    )
+    conclusion = validate_optional_path_extension(conclusion, "conclusion", [".md", ".html"])
     uninstall = validate_optional_path_extension(uninstall, "uninstall", [".sh"])
     if uninstall and no_uninstall:
         raise ValueError("Cannot specify both --uninstall and --no-uninstall")
@@ -119,9 +113,7 @@ def build_installer(
     link = validate_link(link)
     license = validate_optional_path_exists(license, "license")
     banner = validate_optional_path_extension(banner, "banner", [".png"])
-    post_install = validate_optional_path_extension(
-        post_install, "post_install", [".sh"]
-    )
+    post_install = validate_optional_path_extension(post_install, "post_install", [".sh"])
     pre_install = validate_optional_path_extension(pre_install, "pre_install", [".sh"])
     sign = validate_sign(sign)
     output = validate_optional_path_parent_exists(output, "output")
@@ -132,6 +124,7 @@ def build_installer(
     data: dict[str, Any] = {
         "app": app,
         "version": version,
+        "identifier": identifier,
         "uninstall": not no_uninstall,
         "url": url,
         "install": install,
@@ -142,17 +135,25 @@ def build_installer(
         "chmod": chmod,
         "build_dir": build_dir,
         "output": output,
+        "machine": platform.machine(),
     }
 
-    # render args that accept templates
-    install = render_path_list_of_tuple(install, data)
-    link = render_path_list_of_tuple(link, data)
+    # render args that accept templates and update data
+    identifier = render_str(identifier, data)
+    data["identifier"] = identifier
     output = render_path(output, data) if output else None
+    data["output"] = output
     build_dir = render_path(build_dir, data)
+    data["build_dir"] = build_dir
+    install = render_path_list_of_tuple(install, data)
+    data["install"] = install
+    link = render_path_list_of_tuple(link, data)
+    data["link"] = link
 
     build_installer_(
         app=app,
         version=version,
+        identifier=identifier,
         welcome=welcome,
         conclusion=conclusion,
         uninstall=uninstall,
@@ -173,6 +174,7 @@ def build_installer(
 def build_installer_(
     app: str,
     version: str,
+    identifier: str,
     welcome: pathlib.Path | None = None,
     conclusion: pathlib.Path | None = None,
     uninstall: pathlib.Path | None = None,
@@ -217,9 +219,7 @@ def build_installer_(
 
     if license:
         verbose("Copying license file")
-        copy_and_create_parents(
-            license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose
-        )
+        copy_and_create_parents(license, build_dir / "Resources" / "LICENSE.txt", verbose=verbose)
 
     if install:
         verbose("Copying install files")
@@ -229,15 +229,7 @@ def build_installer_(
     # Render the uninstall script
     if not no_uninstall:
         verbose("Creating uninstall script")
-        target = (
-            build_dir
-            / "darwinpkg"
-            / "Library"
-            / "Application Support"
-            / app
-            / version
-            / "uninstall.sh"
-        )
+        target = build_dir / "darwinpkg" / "Library" / "Application Support" / app / version / "uninstall.sh"
         if uninstall:
             render_template_from_file(uninstall, data, target)
         else:
@@ -287,7 +279,7 @@ def build_installer_(
 
     # Build the macOS installer package
     verbose("Building the macOS installer package")
-    build_package(app, version, build_dir, verbose=verbose)
+    build_package(app, version, identifier, build_dir, verbose=verbose)
 
     # Build the macOS installer product
     verbose("Building the macOS installer product")
@@ -326,9 +318,7 @@ def validate_version(version: str) -> str:
     return version
 
 
-def validate_optional_path_exists(
-    arg: str | os.PathLike | None, name: str
-) -> pathlib.Path | None:
+def validate_optional_path_exists(arg: str | os.PathLike | None, name: str) -> pathlib.Path | None:
     """Validate an optional path argument."""
     if not arg:
         return None
@@ -338,9 +328,7 @@ def validate_optional_path_exists(
     return path
 
 
-def validate_optional_path_parent_exists(
-    arg: str | os.PathLike | None, name: str
-) -> pathlib.Path | None:
+def validate_optional_path_parent_exists(arg: str | os.PathLike | None, name: str) -> pathlib.Path | None:
     """Validate an optional path argument."""
     if not arg:
         return None
@@ -350,9 +338,7 @@ def validate_optional_path_parent_exists(
     return path
 
 
-def validate_optional_path_extension(
-    path: str | os.PathLike | None, name: str, extension: list[str]
-) -> pathlib.Path | None:
+def validate_optional_path_extension(path: str | os.PathLike | None, name: str, extension: list[str]) -> pathlib.Path | None:
     """Validate argument is a valid path with a given extension, or None."""
     path = validate_optional_path_exists(path, name)
     if not path:
@@ -363,10 +349,7 @@ def validate_optional_path_extension(
 
 
 def validate_install(
-    install: (
-        Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]]
-        | None
-    ),
+    install: (Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]] | None),
 ) -> list[tuple[pathlib.Path, pathlib.Path]]:
     """Validate build_installer install argument."""
     if not install:
@@ -384,10 +367,7 @@ def validate_install(
 
 
 def validate_link(
-    link: (
-        Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]]
-        | None
-    ),
+    link: (Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]] | None),
 ) -> list[tuple[pathlib.Path, pathlib.Path]]:
     if not link:
         return []
@@ -421,12 +401,7 @@ def validate_sign(sign: str | None) -> str | None:
 
 
 def validate_chmod(
-    chmod: (
-        Iterable[
-            tuple[str | int, str | os.PathLike] | list[str | int | str | os.PathLike]
-        ]
-        | None
-    ),
+    chmod: (Iterable[tuple[str | int, str | os.PathLike] | list[str | int | str | os.PathLike]] | None),
 ) -> list[tuple[str, pathlib.Path]] | None:
     """Validate chmod argument."""
     if not chmod:
@@ -463,19 +438,13 @@ def validate_build_kwargs(**kwargs) -> dict[str, Any]:
         raise ValueError("Cannot specify both --uninstall and --no-uninstall")
 
     if welcome := kwargs.get("welcome"):
-        kwargs["welcome"] = validate_optional_path_extension(
-            welcome, "welcome", [".md", ".html"]
-        )
+        kwargs["welcome"] = validate_optional_path_extension(welcome, "welcome", [".md", ".html"])
 
     if conclusion := kwargs.get("conclusion"):
-        kwargs["conclusion"] = validate_optional_path_extension(
-            conclusion, "conclusion", [".md", ".html"]
-        )
+        kwargs["conclusion"] = validate_optional_path_extension(conclusion, "conclusion", [".md", ".html"])
 
     if uninstall := kwargs.get("uninstall"):
-        kwargs["uninstall"] = validate_optional_path_extension(
-            uninstall, "uninstall", [".sh"]
-        )
+        kwargs["uninstall"] = validate_optional_path_extension(uninstall, "uninstall", [".sh"])
 
     if install := kwargs.get("install"):
         kwargs["install"] = validate_install(install)
@@ -560,7 +529,11 @@ def check_dependencies(verbose: Callable[..., None]):
 
 
 def build_package(
-    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
+    app: str,
+    version: str,
+    identifier: str,
+    target_directory: pathlib.Path,
+    verbose: Callable[..., None],
 ):
     """Build the macOS installer package."""
     pkg = f"{target_directory}/package/{app}.pkg"
@@ -568,7 +541,7 @@ def build_package(
         [
             "pkgbuild",
             "--identifier",
-            f"org.{app}.{version}",
+            identifier,
             "--version",
             version,
             "--scripts",
@@ -581,15 +554,11 @@ def build_package(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"pkgbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Created {pkg}")
 
 
-def build_product(
-    app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]
-):
+def build_product(app: str, version: str, target_directory: pathlib.Path, verbose: Callable[..., None]):
     """Build the macOS installer package."""
     product = f"{target_directory}/pkg/{app}-{version}.pkg"
     proc = subprocess.run(
@@ -607,9 +576,7 @@ def build_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"productbuild failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Created {product}")
 
 
@@ -632,9 +599,7 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"productsign failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Signed {product_path} to {signed_product_path}")
 
     proc = subprocess.run(
@@ -643,9 +608,7 @@ def sign_product(
         stderr=subprocess.PIPE,
     )
     if proc.returncode != 0:
-        raise RuntimeError(
-            f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}"
-        )
+        raise RuntimeError(f"pkgutil signature check failed: {proc.returncode} {proc.stderr.decode('utf-8')}")
     verbose(f"Checked signature of {signed_product_path}")
 
 

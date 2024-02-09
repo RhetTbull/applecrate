@@ -56,6 +56,12 @@ def render_template_from_file(filepath: pathlib.Path, data: dict[str, Any], outp
         file.write(rendered)
 
 
+def render_str(template_str: str, data: dict[str, Any]) -> str:
+    """Render a string template."""
+    template = Template(template_str)
+    return template.render(**data)
+
+
 def render_path(path: pathlib.Path | None, data: dict[str, Any]) -> pathlib.Path:
     """Render a path template."""
     template = Template(str(path))
