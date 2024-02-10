@@ -14,6 +14,7 @@ from .utils import set_from_defaults
 
 
 @click.group()
+@click.version_option()
 def cli():
     """applecrate: A Python package for creating macOS installer packages."""
     pass
