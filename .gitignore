@@ -13,3 +13,4 @@ build/
 docsrc/_build/
 .python-version
 cov.xml
+working/
