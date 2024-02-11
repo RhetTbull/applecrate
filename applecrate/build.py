@@ -387,14 +387,14 @@ def validate_sign(sign: str | None) -> str | None:
     """Validate the sign argument."""
     if not sign:
         return None
-    if sign.startswith("Developer ID Installer:"):
-        sign = sign[24:]
     if sign.startswith("$"):
         # get the value of the environment variable
         env_sign = os.environ.get(sign[1:])
         if not env_sign:
             raise ValueError(f"Environment variable {sign[1:]} is not set")
         sign = env_sign
+    if sign.startswith("Developer ID Installer:"):
+        sign = sign[24:]
     if not check_certificate_is_valid(sign):
         raise ValueError(f"Invalid certificate ID: {sign}")
     return sign
