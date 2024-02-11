@@ -2,16 +2,16 @@
 # The version in this file will be updated by bump2version
 
 app = "applecrate"
-version = "0.1.4"
+version = "0.1.5"
 identifier = "org.rhettbull.applecrate"
 install = [
     [
-        "applecrate-0.1.4-x86_64",
-        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.4-x86_64",
+        "applecrate-0.1.5-x86_64",
+        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.5-x86_64",
     ],
     [
-        "applecrate-0.1.4-arm64",
-        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.4-arm64",
+        "applecrate-0.1.5-arm64",
+        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.5-arm64",
     ],
 ]
 pre_install = "preinstall.sh"
