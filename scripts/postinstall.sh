@@ -13,5 +13,5 @@
 # CPU will be x86_64 or arm64
 CPU=$(uname -m)
 
-ln -s "/Library/Application Support/{{ app }}/{{ version }}/{{ app }}-{{ version }}-${CPU}" "/usr/local/bin/applecrate"
+ln -s "/Library/Application Support/{{ app }}/{{ version }}/{{ app }}-{{ version }}-$CPU" "/usr/local/bin/applecrate"
 chmod 755 "/usr/local/bin/applecrate"

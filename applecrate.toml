@@ -16,5 +16,6 @@ install = [
 ]
 pre_install = "preinstall.sh"
 post_install = "postinstall.sh"
+uninstall = "uninstall.sh"
 output = "dist/{{ app }}-{{ version }}-installer.pkg"
 sign = "$DEVELOPER_ID_INSTALLER"
