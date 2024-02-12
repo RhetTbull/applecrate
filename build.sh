@@ -10,10 +10,8 @@ VERSION=$(grep __version__ applecrate/version.py | cut -d "\"" -f 2)
 
 # Build the binaries
 # arm64 binary built on a remote M1 Mac
-pyapp-runner arm applecrate $VERSION
-
-# Intel binary built on my local MacBook
-pyapp applecrate $VERSION
+bash scripts/pyapp-runner.sh m1 applecrate $VERSION
+bash scripts/pyapp-runner.sh macbook applecrate $VERSION
 
 # Sign the binaries
 echo "Signing the binaries with Developer ID Application certificate: $DEVELOPER_ID_APPLICATION"
