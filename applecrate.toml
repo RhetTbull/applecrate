@@ -6,16 +6,10 @@ version = "0.1.5"
 identifier = "org.rhettbull.applecrate"
 install = [
     [
-        "build/applecrate-0.1.5-x86_64",
-        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.5-x86_64",
-    ],
-    [
-        "build/applecrate-0.1.5-arm64",
-        "/Library/Application Support/{{ app }}/{{ version }}/applecrate-0.1.5-arm64",
+        "build/applecrate-0.1.5-{{ machine }}",
+        "/usr/local/bin/applecrate",
     ],
 ]
 pre_install = "scripts/preinstall.sh"
-post_install = "scripts/postinstall.sh"
-uninstall = "scripts/uninstall.sh"
-output = "dist/{{ app }}-{{ version }}-installer.pkg"
+output = "dist/{{ app }}-{{ version }}-{{ machine }}-installer.pkg"
 sign = "$DEVELOPER_ID_INSTALLER"
