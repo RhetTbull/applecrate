@@ -7,7 +7,7 @@ import pytest
 from click.testing import CliRunner
 
 from applecrate.cli import cli
-from applecrate.pkg_utils import pkg_files, pkg_info
+from applecrate.pkgutil import pkg_files, pkg_info
 
 
 def test_cli_config_precedence():

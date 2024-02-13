@@ -7,7 +7,7 @@ import pytest
 
 from applecrate import build_installer
 from applecrate.build import BUILD_DIR
-from applecrate.pkg_utils import extract_pkg, pkg_files
+from applecrate.pkgutil import extract_pkg, pkg_files
 
 from .conftest import write_files
 
