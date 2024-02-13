@@ -6,8 +6,22 @@ AppleCrate is a tool for creating native macOS installers for your command line 
 
 ## Installation
 
+See the [latest release](https://github.com/RhetTbull/applecrate/releases/latest) for the AppleCrate installer package for your platform. This installer includes a signed binary for the `applecrate` command line tool built with [PyApp](https://ofek.dev/pyapp/latest/) and packaged with AppleCrate itself into a signed macOS installer package.
+
+Note: I've not yet figured out how to create a universal binary with PyApp so you'll need to download the correct installer package for your platform, e.g. `applecrate-0.1.7-x86_64-installer.pkg` for Intel Macs and `applecrate-0.1.7-arm64-installer.pkg` for Apple Silicon Macs.
+
+Alternatively, you can install AppleCrate with pip or pipx:
+
+AppleCrate requires Python 3.9 or later.
+
 ```bash
 pip install applecrate
+```
+
+or
+
+```bash
+pipx install applecrate
 ```
 
 ## Simple Example
@@ -202,7 +216,7 @@ The Jinja2 template engine will replace `{{ source }}` and `{{ target }}` with t
 
 See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0.x/templates/) for more information on how to use template variables.
 
-The package identifier and path arguments such as the build path and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables.
+The package identifier and path arguments such as the build path and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables. Your scripts and welcome/conclusion files will have access to all of the variables.
 
 ## Utilities
 
@@ -231,11 +245,11 @@ from applecrate.pkgutil import pkg_info, pkg_files, extract_pkg
 ## To Do
 
 - [X] Add support for signing the installer with a developer certificate
-- [ ] Add support for notarizing the installer
 - [X] Add python API to create installers programmatically
+- [X] Tests
 - [ ] Add `applecrate check` command to check the configuration without building the installer
 - [ ] Documentation (set up mkdocs)
-- [X] Tests
+- [ ] Add support for notarizing the installer
 
 ## Credits
 
