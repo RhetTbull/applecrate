@@ -1,18 +1,21 @@
 #!/bin/bash
 
-# PyApp Runner
+# PyApp Runner -- Very simple CI for building/packaging python project via PyApp and AppleCrate
 # This script is used to build and copy the PyApp executable from a remote server.
+# It also packages the executable with applecrate, signs it, and copies it back to the local machine.
+
 # See https://ofek.dev/pyapp/latest/how-to/ for more information on PyApp.
 # The remote server must have PYAPP defined in the ~/.zshenv file
 # to point to the install location of pyapp.
-# For example:
 # echo 'export PYAPP="/Users/johndoe/code/pyapp-latest"' >> ~/.zshenv
 # For code signing to work via ssh, you must first run this one time on the machine via GUI
 # See https://developer.apple.com/forums/thread/712005 for more information on signing via ssh
 # You must also have the following environment variables set in the ~/.zshenv of the remote server:
 # export DEVELOPER_ID_APPLICATION="Developer ID Application: John Doe (XXXXXXXX)"
 # export KEYCHAIN_PASSWORD="password"
-
+# export CODE_DIR="/Users/johndoe/code" # the directory where the code is located
+# This script assumes the code for the project is located in the directory $CODE_DIR/$PROJECT_NAME
+# and that the project is configured for AppleCrate via the applecrate.toml file in the project directory.
 
 # Usage: pyapp-runner.sh SERVER PROJECT_NAME PROJECT_VERSION
 # SERVER is the nick name of the remote server and will be combined with $PYAPP_SERVER_ to get the actual server name
@@ -97,7 +100,7 @@ if [ \$? -ne 0 ]; then
     exit 1
 fi
 
-echo "Done"
+echo "Done building $PROJECT_NAME"
 
 ENDSSH
 
@@ -109,9 +112,11 @@ fi
 # Copy the binary from the remote server
 PYAPP_PATH=$(ssh ${USER}@${SERVER} 'echo $PYAPP')
 PYAPP_ARCH=$(ssh ${USER}@${SERVER} 'uname -m')
+CODE_DIR_SERVER=$(ssh ${USER}@${SERVER} 'echo "${CODE_DIR%/}"')
 mkdir -p dist
-PACKAGE="${PROJECT_NAME}-${PROJECT_VERSION}-${PYAPP_ARCH}-installer.pkg
-echo "Copying $PACKAGE from $SERVER"
-scp ${USER}@${SERVER}:"${CODE_DIR}/dist/$PACKAGE" dist/
+PACKAGE="${PROJECT_NAME}-${PROJECT_VERSION}-${PYAPP_ARCH}-installer.pkg"
+TARGET="dist/${PACKAGE}"
+echo "Copying $PACKAGE from $SERVER to $TARGET"
+scp ${USER}@${SERVER}:"${CODE_DIR_SERVER}/${PROJECT_NAME}/dist/$PACKAGE" $TARGET
 
 echo "Done: ${TARGET}"
