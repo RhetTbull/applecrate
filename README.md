@@ -10,7 +10,9 @@ See the [latest release](https://github.com/RhetTbull/applecrate/releases/latest
 
 Note: I've not yet figured out how to create a universal binary with PyApp so you'll need to download the correct installer package for your platform, e.g. `applecrate-0.1.7-x86_64-installer.pkg` for Intel Macs and `applecrate-0.1.7-arm64-installer.pkg` for Apple Silicon Macs.
 
-Alternatively, you can install AppleCrate with pip or pipx:
+The installer package will add the `applecrate` command line tool to `/usr/local/bin`. You can upgrade to a new version of AppleCrate by running `applecrate self update` (this only works if you installed AppleCrate with the installer package).
+
+Alternatively, you can install AppleCrate with `pip` or `pipx`:
 
 AppleCrate requires Python 3.9 or later.
 
