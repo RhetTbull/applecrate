@@ -2,11 +2,11 @@
 # The version in this file will be updated by bump2version
 
 app = "applecrate"
-version = "0.1.5"
+version = "0.1.6"
 identifier = "org.rhettbull.applecrate"
 install = [
     [
-        "build/applecrate-0.1.5-{{ machine }}",
+        "build/applecrate-0.1.6-{{ machine }}",
         "/usr/local/bin/applecrate",
     ],
 ]
