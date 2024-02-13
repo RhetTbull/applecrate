@@ -47,7 +47,7 @@ fi
 echo "Building on $SERVER"
 
 # Connect to the remote server
-ssh ${USER}@${SERVER} 'bash -s' << ENDSSH
+ssh ${USER}@${SERVER} 'bash -l -s' << ENDSSH
 # Commands to run on remote host
 cd \$PYAPP
 
@@ -65,13 +65,40 @@ fi
 # sign the binary
 # For this to work via ssh, you must first run this one time on the machine via GUI
 # Then click "Always Allow" when prompted to always allow codesign to access the key in the future
-echo "Signing the binary with \$DEVELOPER_ID_APPLICATION"
+
+echo "Unlocking keychain"
 security unlock-keychain -p \$KEYCHAIN_PASSWORD
+
 if [ \$? -ne 0 ]; then
     echo "Failed to unlock keychain"
     exit 1
 fi
+
+echo "Signing the binary with \$DEVELOPER_ID_APPLICATION"
 codesign --force -s "\$DEVELOPER_ID_APPLICATION" target/release/pyapp
+
+if [ \$? -ne 0 ]; then
+    echo "Codesign failed"
+    exit 1
+fi
+
+# package the binary
+mkdir -p "\${CODE_DIR}/${PROJECT_NAME}/build"
+TARGET="\${CODE_DIR}/${PROJECT_NAME}/build/${PROJECT_NAME}-${PROJECT_VERSION}-\$(uname -m)"
+echo "Copying target/release/pyapp to \$TARGET"
+cp "target/release/pyapp" \$TARGET
+
+echo "Changing to \${CODE_DIR}/${PROJECT_NAME}"
+cd \${CODE_DIR}/${PROJECT_NAME}
+applecrate build
+
+if [ \$? -ne 0 ]; then
+    echo "Package build failed"
+    exit 1
+fi
+
+echo "Done"
+
 ENDSSH
 
 if [ $? -ne 0 ]; then
@@ -82,9 +109,9 @@ fi
 # Copy the binary from the remote server
 PYAPP_PATH=$(ssh ${USER}@${SERVER} 'echo $PYAPP')
 PYAPP_ARCH=$(ssh ${USER}@${SERVER} 'uname -m')
-mkdir -p build
-TARGET="build/"${PROJECT_NAME}-${PROJECT_VERSION}-${PYAPP_ARCH}
-echo "Copying ${PYAPP_PATH}/target/release/pyapp to ${TARGET}"
-scp ${USER}@${SERVER}:"${PYAPP_PATH}/target/release/pyapp" ${TARGET}
+mkdir -p dist
+PACKAGE="${PROJECT_NAME}-${PROJECT_VERSION}-${PYAPP_ARCH}-installer.pkg
+echo "Copying $PACKAGE from $SERVER"
+scp ${USER}@${SERVER}:"${CODE_DIR}/dist/$PACKAGE" dist/
 
 echo "Done: ${TARGET}"
