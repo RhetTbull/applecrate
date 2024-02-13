@@ -4,6 +4,7 @@
 app = "applecrate"
 version = "0.1.7"
 identifier = "org.rhettbull.applecrate"
+license = "LICENSE"
 install = [
     [
         "build/applecrate-0.1.7-{{ machine }}",
