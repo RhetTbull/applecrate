@@ -204,6 +204,30 @@ See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0
 
 The package identifier and path arguments such as the build path and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables.
 
+## Utilities
+
+AppleCrate includes a few utilities for working with installer packages:
+
+```python
+from applecrate.pkgutil import pkg_info, pkg_files, extract_pkg
+```
+
+- `pkg_info` returns a dictionary of information about the package:
+- `pkg_files` returns a list of files in the package.
+- `extract_pkg` extracts the package to a directory.
+
+```pycon
+>>> import os
+>>> from applecrate.pkgutil import pkg_info, pkg_files, extract_pkg
+>>> pkg_info("dist/applecrate-0.1.6-x86_64-installer.pkg")
+{'overwrite-permissions': 'true', 'relocatable': 'false', 'identifier': 'org.rhettbull.applecrate', 'postinstall-action': 'none', 'version': '0.1.6', 'format-version': '2', 'generator-version': 'InstallCmds-830.2 (22G90)', 'auth': 'root'}
+>>> pkg_files("dist/applecrate-0.1.6-x86_64-installer.pkg")
+['Distribution', 'Resources/conclusion.html', 'Resources/welcome.html', 'applecrate.pkg/postinstall', 'applecrate.pkg/Bom', 'applecrate.pkg/custom_preinstall', 'applecrate.pkg/Payload', 'applecrate.pkg/Scripts', 'applecrate.pkg/preinstall', 'applecrate.pkg/PackageInfo', 'applecrate.pkg/usr/local/bin/applecrate', 'applecrate.pkg/Library/Application Support/applecrate/0.1.6/uninstall.sh']
+>>> os.mkdir("temp")
+>>> extract_pkg("dist/applecrate-0.1.6-x86_64-installer.pkg", "temp")
+>>>
+```
+
 ## To Do
 
 - [X] Add support for signing the installer with a developer certificate
