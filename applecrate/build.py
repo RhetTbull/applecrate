@@ -109,7 +109,7 @@ def build_installer(
     uninstall = validate_optional_path_extension(uninstall, "uninstall", [".sh"])
     if uninstall and no_uninstall:
         raise ValueError("Cannot specify both --uninstall and --no-uninstall")
-    install = validate_install(install)
+    install = validate_install(install, {"app": app, "version": version, "machine": platform.machine()})
     link = validate_link(link)
     license = validate_optional_path_exists(license, "license")
     banner = validate_optional_path_extension(banner, "banner", [".png"])
@@ -350,6 +350,7 @@ def validate_optional_path_extension(path: str | os.PathLike | None, name: str, 
 
 def validate_install(
     install: (Iterable[tuple[str | os.PathLike, str | os.PathLike] | list[str | os.PathLike]] | None),
+    data: dict[str, Any],
 ) -> list[tuple[pathlib.Path, pathlib.Path]]:
     """Validate build_installer install argument."""
     if not install:
@@ -357,6 +358,7 @@ def validate_install(
     pathlib_install = []
     for src, dest in install:
         src = pathlib.Path(src)
+        src = render_path(src, data)
         if not src.exists():
             raise ValueError(f"Install dir/file {src} does not exist")
         dest = pathlib.Path(dest)
@@ -447,7 +449,13 @@ def validate_build_kwargs(**kwargs) -> dict[str, Any]:
         kwargs["uninstall"] = validate_optional_path_extension(uninstall, "uninstall", [".sh"])
 
     if install := kwargs.get("install"):
-        kwargs["install"] = validate_install(install)
+        # install needs to be rendered to ensure paths exists
+        data = {
+            "app": kwargs.get("app"),
+            "version": kwargs.get("version"),
+            "machine": platform.machine(),
+        }
+        kwargs["install"] = validate_install(install, data)
 
     if link := kwargs.get("link"):
         kwargs["link"] = validate_link(link)

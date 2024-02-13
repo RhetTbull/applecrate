@@ -202,7 +202,7 @@ The Jinja2 template engine will replace `{{ source }}` and `{{ target }}` with t
 
 See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0.x/templates/) for more information on how to use template variables.
 
-The package identifier, the build path, and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables.
+The package identifier and path arguments such as the build path and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables.
 
 ## To Do
 
