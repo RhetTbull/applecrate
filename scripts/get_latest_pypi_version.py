@@ -13,7 +13,7 @@ import urllib.request
 VERSION_INFO_URL = "https://pypi.org/pypi/{}/json"
 
 
-def get_latest_version(package_name: str) -> str | None:
+def get_latest_version(package_name: str) -> str:
     """Get latest version of package_name from PyPI"""
     try:
         url = VERSION_INFO_URL.format(package_name)
