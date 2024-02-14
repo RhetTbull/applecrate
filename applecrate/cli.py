@@ -103,7 +103,7 @@ def cli():
     metavar="SRC TARGET",
     nargs=2,
     multiple=True,
-    help="Create a symbolic link from SRC to DEST after installation. "
+    help="Create a symbolic link from SRC to TARGET after installation. "
     "SRC and TARGET must be absolute paths and both may include template variables {{ app }} and {{ version }}. "
     'For example: `--link "/Library/Application Support/{{ app }}/{{ version }}/app" "/usr/local/bin/{{ app }}-{{ version }}"` ',
 )
