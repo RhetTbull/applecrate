@@ -33,6 +33,18 @@ SERVER=$1
 PROJECT_NAME=$2
 PROJECT_VERSION=$3
 
+# verify PROJECT_VERSION is valid
+# PyApp will happily build with an invalid version number
+# get directory of this script
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PYPI_VERSION=$(python $DIR/get_latest_pypi_version.py $PROJECT_NAME)
+if [ "$PYPI_VERSION" != "$PROJECT_VERSION" ]; then
+    echo "Invalid version number: $PROJECT_VERSION"
+    echo "Latest version on PyPI: $PYPI_VERSION"
+    echo "Did you forget to run 'flit publish'?"
+    exit 1
+fi
+
 # define the remote server and user
 # assumes ssh keys are setup for the user
 # Set these directly or read from environment variables
