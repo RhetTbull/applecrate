@@ -220,6 +220,8 @@ See the [Jinja2 template documentation](https://jinja.palletsprojects.com/en/3.0
 
 The package identifier and path arguments such as the build path and the output file path may also be templates but they will only have access to the `app`, `version`, and `machine` variables. Your scripts and welcome/conclusion files will have access to all of the variables.
 
+See the [templates](https://github.com/RhetTbull/applecrate/tree/main/applecrate/templates) directory in the AppleCrate source code for examples of how to use these variables in your own scripts or welcome/conclusion files.
+
 ## Utilities
 
 AppleCrate includes a few utilities for working with installer packages:
