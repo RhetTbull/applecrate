@@ -93,6 +93,8 @@ cp "target/release/pyapp" \$TARGET
 
 echo "Changing to \${CODE_DIR}/${PROJECT_NAME}"
 cd \${CODE_DIR}/${PROJECT_NAME}
+echo "Pulling latest code and building package"
+git pull
 applecrate build
 
 if [ \$? -ne 0 ]; then
