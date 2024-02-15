@@ -1,27 +1,36 @@
 #!/bin/bash
 
-# PyApp Runner -- Very simple CI for building/packaging python project via PyApp and AppleCrate
+#################################################################################
+# PyApp Runner
+# Very simple CI for building/packaging python project on Mac via PyApp and AppleCrate
 # This script is used to build and copy the PyApp executable from a remote server.
-# It also packages the executable with applecrate, signs it, and copies it back to the local machine.
-
-# See https://ofek.dev/pyapp/latest/how-to/ for more information on PyApp.
-# The remote server must have PYAPP defined in the ~/.zshenv file
-# to point to the install location of pyapp.
-# echo 'export PYAPP="/Users/johndoe/code/pyapp-latest"' >> ~/.zshenv
-# For code signing to work via ssh, you must first run this one time on the machine via GUI
-# See https://developer.apple.com/forums/thread/712005 for more information on signing via ssh
-# You must also have the following environment variables set in the ~/.zshenv of the remote server:
-# export DEVELOPER_ID_APPLICATION="Developer ID Application: John Doe (XXXXXXXX)"
-# export KEYCHAIN_PASSWORD="password"
-# export CODE_DIR="/Users/johndoe/code" # the directory where the code is located
-# This script assumes the code for the project is located in the directory $CODE_DIR/$PROJECT_NAME
-# and that the project is configured for AppleCrate via the applecrate.toml file in the project directory.
-
+# It also packages the executable with applecrate, signs it, and
+# copies it back to the local machine.
+#
 # Usage: pyapp-runner.sh SERVER PROJECT_NAME PROJECT_VERSION
-# SERVER is the nick name of the remote server and will be combined with $PYAPP_SERVER_ to get the actual server name
+#
+# SERVER is the nick name of the remote server and will be combined with
+# $PYAPP_SERVER_ to get the actual server name
 # In my case, I have the following values for the server in my ~/.zshrc file:
 # export PYAPP_SERVER_INTEL="address of Intel Mac"
 # export PYAPP_SERVER_ARM="address of Apple Silicon Mac"
+# export PYAPP_USER="username" # the username to use for ssha
+#
+# The remote server must have the following environment variables set in the ~/.zshenv:
+# export PYAPP="/Users/johndoe/code/pyapp-latest" # the install location of pyapp
+# export DEVELOPER_ID_APPLICATION="Developer ID Application: John Doe (XXXXXXXX)" # signing identity
+# export KEYCHAIN_PASSWORD="password" # password for the keychain where signing identity is stored
+# export CODE_DIR="/Users/johndoe/code" # the directory where the code is located
+# This script assumes the code for the project is located in the directory
+#   $CODE_DIR/$PROJECT_NAME
+#
+# For code signing to work via ssh, you must first run this one time on the machine via GUI
+#
+# References:
+# See https://ofek.dev/pyapp/latest/how-to/ for more information on PyApp.
+# See https://github.com/RhetTbull/applecrate for more information on AppleCrate.
+# See https://developer.apple.com/forums/thread/712005 for more information on signing via ssh
+#################################################################################
 
 # Check that all 3 arguments are provided
 if [ $# -ne 3 ]; then
@@ -124,6 +133,13 @@ if [ $? -ne 0 ]; then
 fi
 
 # Copy the binary from the remote server
+# If server IP is same as local IP, then skip the copy
+LOCAL_IP=$(ipconfig getifaddr en0)
+REMOTE_IP=$(ssh ${USER}@${SERVER} 'ipconfig getifaddr en0')
+if [ "$LOCAL_IP" == "$REMOTE_IP" ]; then
+    echo "Building on local machine, skipping copy from $SERVER to $LOCAL_IP"
+    exit 0
+fi
 PYAPP_PATH=$(ssh ${USER}@${SERVER} 'echo $PYAPP')
 PYAPP_ARCH=$(ssh ${USER}@${SERVER} 'uname -m')
 CODE_DIR_SERVER=$(ssh ${USER}@${SERVER} 'echo "${CODE_DIR%/}"')
