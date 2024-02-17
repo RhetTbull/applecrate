@@ -21,12 +21,14 @@ def pyapp() -> bool:
     return os.environ.get("PYAPP") == "1"
 
 
-def install(packages: Iterable[str], upgrade: bool = False):
-    """Install Python packages into the same environment as the current script
+def install(packages: Iterable[str], upgrade: bool = False) -> int:
+    """Install Python packages into the same environment as the current script using the pip module.
 
     Args:
         packages: The names of the packages to install.
         upgrade: Whether to upgrade the packages if they are already installed.
+
+    Returns: The exit code of the pip command.
     """
     args = ["pip", "--disable-pip-version-check", "--verbose", "install"]
     if upgrade:
@@ -96,4 +98,5 @@ def get_latest_version(package_name: str) -> str:
         data = json.load(response)
         return data["info"]["version"]
     except Exception as e:
-        raise ValueError(f"Error retrieving version for {package_name}: {e}")
+        raise ValueError(f"Error retrieving version for {package_name}: {e}") from e
+
