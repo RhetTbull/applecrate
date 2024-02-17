@@ -10,7 +10,7 @@ See the [latest release](https://github.com/RhetTbull/applecrate/releases/latest
 
 Note: I've not yet figured out how to create a universal binary with PyApp so you'll need to download the correct installer package for your platform, e.g. `applecrate-0.1.7-x86_64-installer.pkg` for Intel Macs and `applecrate-0.1.7-arm64-installer.pkg` for Apple Silicon Macs.
 
-The installer package will add the `applecrate` command line tool to `/usr/local/bin`. You can upgrade to a new version of AppleCrate by running `applecrate self update` (this only works if you installed AppleCrate with the installer package).
+The installer package will add the `applecrate` command line tool to `/usr/local/bin`. You can upgrade to a new version of AppleCrate by running `applecrate update`.
 
 Alternatively, you can install AppleCrate with `pip` or `pipx`:
 
@@ -25,6 +25,16 @@ or
 ```bash
 pipx install applecrate
 ```
+
+## Upgrading
+
+AppleCrate includes a self-update command to upgrade your installation to the latest version of AppleCrate. This works for both the binary installer package and the `pip` or `pipx` installation.
+
+```bash
+applecrate update
+```
+
+If you are interested in implementing this in your own Python package, see the [implementation](https://github.com/RhetTbull/applecrate/blob/main/applecrate/selfupdate.py).
 
 ## Simple Example
 
@@ -116,13 +126,13 @@ Options:
                                   install the file 'dist/app' to
                                   '/usr/local/bin/app-1.0.0' if --app=app and
                                   --version=1.0.0.
-  -k, --link SRC TARGET           Create a symbolic link from SRC to DEST after
-                                  installation. SRC and TARGET must be absolute
-                                  paths and both may include template variables
-                                  {{ app }} and {{ version }}. For example:
-                                  `--link "/Library/Application Support/{{ app
-                                  }}/{{ version }}/app" "/usr/local/bin/{{ app
-                                  }}-{{ version }}"`
+  -k, --link SRC TARGET           Create a symbolic link from SRC to TARGET
+                                  after installation. SRC and TARGET must be
+                                  absolute paths and both may include template
+                                  variables {{ app }} and {{ version }}. For
+                                  example: `--link "/Library/Application
+                                  Support/{{ app }}/{{ version }}/app"
+                                  "/usr/local/bin/{{ app }}-{{ version }}"`
   -p, --pre-install FILE          Path to pre-install shell script; if not
                                   provided, a pre-install script will be created
                                   for you.
