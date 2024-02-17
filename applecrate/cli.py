@@ -25,7 +25,7 @@ def cli():
 @cli.command(name="update")
 def update_command():
     """Update the installation to the latest version."""
-    update("applecrate", __version__)
+    update("applecrate", __version__, "applecrate")
 
 
 # @cli.command()
@@ -49,8 +49,7 @@ def update_command():
     "--license",
     "-l",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to license file. "
-    "If provided, the installer will include a click-through license agreement.",
+    help="Path to license file. " "If provided, the installer will include a click-through license agreement.",
 )
 @click.option(
     "--welcome",
@@ -120,8 +119,7 @@ def update_command():
     "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to pre-install shell script; "
-    "if not provided, a pre-install script will be created for you.",
+    help="Path to pre-install shell script; " "if not provided, a pre-install script will be created for you.",
 )
 @click.option(
     "--post-install",
@@ -155,8 +153,7 @@ def update_command():
     "--build-dir",
     "-d",
     type=click.Path(file_okay=False, writable=True, exists=True),
-    help="Build directory to use for building the installer package. "
-    f"Default is {BUILD_DIR} if not provided.",
+    help="Build directory to use for building the installer package. " f"Default is {BUILD_DIR} if not provided.",
 )
 @click.option(
     "--output",

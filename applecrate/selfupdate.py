@@ -51,16 +51,17 @@ def install(packages: Iterable[str], upgrade: bool = False):
     return exit_code
 
 
-def update(package: str, version: str) -> None:
+def update(package: str, version: str, pyapp_binary: str) -> None:
     """Update the installation to the latest version.
 
     Args:
         package: The name of the package to update.
         version: The current version of the package.
+        pyapp_binary: The name of the pyapp binary to use for updating.
     """
     if pyapp():
         # let pyapp handle the update
-        command = [sys.argv[0], "self", "update"]
+        command = [pyapp_binary, "self", "update"]
         subprocess.run(command, check=True)
         return
     else:
