@@ -10,7 +10,9 @@ import toml
 from click import echo
 
 from .build import BUILD_DIR, build_installer, check_dependencies, validate_build_kwargs
+from .selfupdate import update
 from .utils import set_from_defaults
+from .version import __version__
 
 
 @click.group()
@@ -18,6 +20,12 @@ from .utils import set_from_defaults
 def cli():
     """applecrate: A Python package for creating macOS installer packages."""
     pass
+
+
+@cli.command(name="update")
+def update_command():
+    """Update the installation to the latest version."""
+    update("applecrate", __version__)
 
 
 # @cli.command()
@@ -41,7 +49,8 @@ def cli():
     "--license",
     "-l",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to license file. " "If provided, the installer will include a click-through license agreement.",
+    help="Path to license file. "
+    "If provided, the installer will include a click-through license agreement.",
 )
 @click.option(
     "--welcome",
@@ -111,7 +120,8 @@ def cli():
     "--pre-install",
     "-p",
     type=click.Path(dir_okay=False, exists=True),
-    help="Path to pre-install shell script; " "if not provided, a pre-install script will be created for you.",
+    help="Path to pre-install shell script; "
+    "if not provided, a pre-install script will be created for you.",
 )
 @click.option(
     "--post-install",
@@ -145,7 +155,8 @@ def cli():
     "--build-dir",
     "-d",
     type=click.Path(file_okay=False, writable=True, exists=True),
-    help="Build directory to use for building the installer package. " f"Default is {BUILD_DIR} if not provided.",
+    help="Build directory to use for building the installer package. "
+    f"Default is {BUILD_DIR} if not provided.",
 )
 @click.option(
     "--output",
