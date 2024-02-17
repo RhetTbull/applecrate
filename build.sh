@@ -10,5 +10,8 @@ VERSION=$(grep __version__ applecrate/version.py | cut -d "\"" -f 2)
 
 # Build the binaries and package them
 # arm64 binary built on a remote M1 Mac
+echo "Building version $VERSION for Apple Silicon"
 bash scripts/pyapp-runner.sh m1 applecrate $VERSION
+
+echo "Building version $VERSION for Intel"
 bash scripts/pyapp-runner.sh macbook applecrate $VERSION
