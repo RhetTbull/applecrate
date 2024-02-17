@@ -57,7 +57,14 @@ def update(package: str, version: str, pyapp_binary: str) -> None:
     Args:
         package: The name of the package to update.
         version: The current version of the package.
-        pyapp_binary: The name of the pyapp binary to use for updating.
+        pyapp_binary: The name of the package binary built with PyApp to use for updating.
+
+    Note:
+        Updating PyApp package requires the pyapp_binary to be available in the PATH.
+        This will work for most users but may fail if the binary is not in the path and
+        was instead invoked using an absolute path, e.g. /path/to/pyapp_binary.
+        I am not aware of a way to get the absolute path of the binary from the package
+        itself as the PyApp binary will execute python, replacing the current process.
     """
     if pyapp():
         # let pyapp handle the update
