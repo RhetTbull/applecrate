@@ -2,7 +2,7 @@
 
 Package your command line tools into a native macOS installer.
 
-AppleCrate is a tool for creating native macOS installers for your command line tools. It's useful for creating installers for command line tools written in any language. Tools written in interpreted languages like Python will need to be first processed with a tool like [pyinstaller](https://www.pyinstaller.org/) or [Ofek Lev's](https://github.com/ofek) excellent [PyApp](https://github.com/ofek/pyapp) to create a standalone executable. If you're starting a new Python command line project, I highly recommend using PyApp by to create the standalone executable.
+AppleCrate is a tool for creating native macOS installers for your command line tools. It's useful for creating installers for command line tools written in any language. Tools written in interpreted languages like Python will need to be first processed with a tool like [pyinstaller](https://www.pyinstaller.org/) or [Ofek Lev's](https://github.com/ofek) excellent [PyApp](https://github.com/ofek/pyapp) to create a standalone executable. If you're starting a new Python command line project, I highly recommend using PyApp to create the standalone executable.
 
 ## Installation
 
