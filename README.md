@@ -1,4 +1,7 @@
 # AppleCrate
+<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![All Contributors](https://img.shields.io/badge/all_contributors-1-orange.svg?style=flat-square)](#contributors-)
+<!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 Package your command line tools into a native macOS installer.
 
@@ -280,3 +283,25 @@ Contributions of all kinds are welcome! Please see [CONTRIBUTING.md](https://git
 ## See Also
 
 [macOS-Pkg-Builder](https://github.com/ripeda/macOS-Pkg-Builder), another Python package for creating macOS installer packages. macOS-Pkg-Builder provides a programmatic interface for creating installer packages and is more flexible than AppleCrate. AppleCrate is designed to be simpler and easier to use for common use cases. I wasn't aware of macOS-Pkg-Builder when I started AppleCrate, but I might have used it to implement AppleCrate had I known about it.
+
+## Contributors ✨
+
+Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/docs/en/emoji-key)):
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://ammarnajjar.github.io"><img src="https://avatars.githubusercontent.com/u/7128635?v=4?s=100" width="100px;" alt="Ammar Najjar"/><br /><sub><b>Ammar Najjar</b></sub></a><br /><a href="https://github.com/RhetTbull/applecrate/commits?author=ammarnajjar" title="Documentation">📖</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification. Contributions of any kind welcome!
