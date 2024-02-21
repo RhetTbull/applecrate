@@ -1,0 +1,26 @@
+{
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "commitType": "docs",
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "ammarnajjar",
+      "name": "Ammar Najjar",
+      "avatar_url": "https://avatars.githubusercontent.com/u/7128635?v=4",
+      "profile": "https://ammarnajjar.github.io",
+      "contributions": [
+        "doc"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7,
+  "skipCi": true,
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "projectName": "applecrate",
+  "projectOwner": "RhetTbull"
+}
